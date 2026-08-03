@@ -127,9 +127,73 @@ function statusChip(row: CandidateRow): { label: string; className: string } {
   const a = row.approval;
   if (!a) return { label: "confirmed", className: "bg-sage-light text-sage" };
   if (a.approvalStatus === "pending") return { label: "Pending approval", className: "bg-gold-light text-gold" };
-  if (a.approvalStatus === "approved") return { label: "Approved → Slack", className: "bg-sage-light text-sage" };
+  if (a.approvalStatus === "approved") return { label: "Approved → Gmail", className: "bg-sage-light text-sage" };
   if (a.message === null) return { label: "Declined — type mismatch", className: "bg-sand text-terracotta-dark" };
   return { label: "Rejected by you", className: "bg-sand-dark text-ink-soft" };
+}
+
+/**
+ * The re-engagement "motion" step, reframed around the email a human would
+ * actually see land (see public/examples/gmail-reengagement-example.png)
+ * rather than the Slack webhook this fires under the hood — same demo
+ * pattern as the deck's reheat-thread.png. `approved` alone (not
+ * `isSendingApprove`) drives the initial stage so a candidate that was
+ * already approved before this component mounted (e.g. on page reload)
+ * renders the resting "shown" state immediately instead of replaying the
+ * send animation.
+ */
+function ApprovalMotion({ isSendingApprove, approved }: { isSendingApprove: boolean; approved: boolean }) {
+  const [stage, setStage] = useState<"idle" | "sending" | "sent" | "shown">(approved ? "shown" : "idle");
+
+  useEffect(() => {
+    if (isSendingApprove) setStage((s) => (s === "idle" ? "sending" : s));
+  }, [isSendingApprove]);
+
+  useEffect(() => {
+    if (stage !== "sending" || !approved) return;
+    const t = setTimeout(() => setStage("sent"), 900);
+    return () => clearTimeout(t);
+  }, [stage, approved]);
+
+  useEffect(() => {
+    if (stage !== "sent") return;
+    const t = setTimeout(() => setStage("shown"), 1100);
+    return () => clearTimeout(t);
+  }, [stage]);
+
+  if (stage === "idle") return null;
+
+  return (
+    <div className="mt-1 space-y-1">
+      <p className={`flex items-center gap-1 text-[10px] ${stage === "sending" ? "text-ink-faint" : "text-sage"}`}>
+        {stage === "sending" ? (
+          <>
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
+            Sending email with Gmail…
+          </>
+        ) : (
+          "✓ Email sent"
+        )}
+      </p>
+      {stage === "shown" && (
+        <a
+          href="/examples/gmail-reengagement-example.png"
+          target="_blank"
+          rel="noreferrer"
+          className="block w-32 overflow-hidden rounded-md border border-sand-dark shadow-sm transition hover:opacity-90"
+          title="Example re-engagement email"
+        >
+          <Image
+            src="/examples/gmail-reengagement-example.png"
+            alt="Example re-engagement email sent via Gmail"
+            width={1182}
+            height={964}
+            className="h-auto w-full"
+          />
+        </a>
+      )}
+    </div>
+  );
 }
 
 function initials(name: string): string {
@@ -161,11 +225,11 @@ function WarmPath({ names }: { names: string[] }) {
 
 export function CandidateTable({
   rows,
-  busyKey,
+  busy,
   onAct,
 }: {
   rows: CandidateRow[];
-  busyKey: string | null;
+  busy: { key: string; action: "approve" | "reject" } | null;
   onAct: (key: string, action: "approve" | "reject") => void;
 }) {
   const prevSignatures = useRef<Map<string, string>>(new Map());
@@ -249,7 +313,7 @@ export function CandidateTable({
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => onAct(row.key, "approve")}
-                        disabled={busyKey === row.key}
+                        disabled={busy?.key === row.key}
                         title="Approve"
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-sage text-cream-card transition hover:opacity-90 disabled:opacity-50"
                       >
@@ -257,7 +321,7 @@ export function CandidateTable({
                       </button>
                       <button
                         onClick={() => onAct(row.key, "reject")}
-                        disabled={busyKey === row.key}
+                        disabled={busy?.key === row.key}
                         title="Reject"
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-terracotta text-cream-card transition hover:opacity-90 disabled:opacity-50"
                       >
@@ -265,10 +329,11 @@ export function CandidateTable({
                       </button>
                     </div>
                   )}
-                  {row.approval?.motion && (
-                    <p className={`text-[10px] ${row.approval.motion.mode === "live" ? "text-sage" : "text-ink-faint"}`}>
-                      {row.approval.motion.mode === "live" ? "✓ sent to Slack" : "not sent"}
-                    </p>
+                  {(row.approval?.motion || (busy?.key === row.key && busy.action === "approve")) && (
+                    <ApprovalMotion
+                      isSendingApprove={busy?.key === row.key && busy.action === "approve"}
+                      approved={row.approval?.approvalStatus === "approved"}
+                    />
                   )}
                 </td>
               </tr>

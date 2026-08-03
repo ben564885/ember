@@ -24,7 +24,7 @@ export function Council() {
   const [vetoed, setVetoed] = useState<VetoedCandidateDTO[]>([]);
   const [trace, setTrace] = useState<AgentTraceStepDTO[]>([]);
   const [loading, setLoading] = useState(false);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ key: string; action: "approve" | "reject" } | null>(null);
   const [ablation, setAblation] = useState<AblationStateDTO | null>(null);
   const [toggleBusy, setToggleBusy] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
@@ -70,7 +70,7 @@ export function Council() {
   }
 
   async function act(key: string, action: "approve" | "reject") {
-    setBusyKey(key);
+    setBusy({ key, action });
     try {
       const res = await fetch(`/api/run/${action}`, {
         method: "POST",
@@ -82,7 +82,7 @@ export function Council() {
         setQueue((q) => q.map((e) => (e.key === key ? data.entry : e)));
       }
     } finally {
-      setBusyKey(null);
+      setBusy(null);
     }
   }
 
@@ -109,7 +109,7 @@ export function Council() {
 
       <AgentPipelineStrip trace={trace} loading={loading} />
 
-      <CandidateTable rows={rows} busyKey={busyKey} onAct={act} />
+      <CandidateTable rows={rows} busy={busy} onAct={act} />
 
       <div className="rounded-2xl border border-sand-dark bg-cream-card p-4">
         <h3 className="mb-3 text-xs font-semibold text-ink">Ablation switches</h3>
