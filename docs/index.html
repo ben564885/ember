@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ember — Best Use of Guild.ai</title>
+<title>Ember — Memory Meets Motion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -107,6 +107,7 @@
     border-radius:14px; padding:14px 18px;
   }
   .tier.primary{ border-color:var(--terracotta); background:var(--gold-light); }
+  .tier.current{ box-shadow:0 0 0 3px var(--gold-light); }
   .tier .n{
     font-family:var(--font-serif); font-style:italic; font-size:22px; color:var(--ink-faint);
     width:22px; flex-shrink:0; text-align:center;
@@ -116,13 +117,22 @@
   .tier .t-desc{ font-size:12.5px; color:var(--ink-faint); margin-top:2px; line-height:1.4; }
   .tier-sep{ text-align:center; color:var(--ink-faint); font-size:14px; margin:-2px 0; }
 
+  /* click-to-reveal orchestration: shared by the agent pipeline, the tier
+     ladder, and the kill-shot verdicts — each press of space/-> reveals the
+     next .reveal element in the current slide before advancing slides */
+  .reveal{
+    opacity:.3; filter:grayscale(70%);
+    transition: opacity .45s ease, filter .45s ease, transform .45s ease;
+  }
+  .reveal.shown{ opacity:1; filter:none; }
+
   /* pipeline */
   .pipeline{
     display:flex; align-items:center; justify-content:center;
     gap:10px; flex-wrap:wrap; margin:34px 0 8px;
   }
   .agent{
-    display:flex; flex-direction:column; align-items:center; gap:8px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
     width:150px;
   }
   .agent .badge{
@@ -131,11 +141,27 @@
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-serif); font-size:26px; font-style:italic; color:var(--ink-soft);
     box-shadow: 0 1px 0 rgba(58,46,39,.03);
+    transition: border-color .3s ease, background .3s ease, color .3s ease, box-shadow .3s ease;
   }
-  .agent.hot .badge{ border-color:var(--terracotta); background:var(--gold-light); color:var(--terracotta-dark); }
+  .agent.current .badge{
+    border-color:var(--terracotta); background:var(--gold-light); color:var(--terracotta-dark);
+    animation: pulse-ring 1.3s ease-out infinite;
+  }
   .agent .name{ font-family:var(--font-serif); font-size:17px; font-weight:400; color:var(--ink); text-align:center; }
   .agent .role{ font-size:11.5px; color:var(--ink-faint); text-align:center; line-height:1.35; }
+  .agent .status{
+    height:13px; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  }
+  .agent .status .running, .agent .status .done{ display:none; }
+  .agent.current .status .running{ display:inline; color:var(--terracotta-dark); }
+  .agent.shown:not(.current) .status .done{ display:inline; color:var(--sage); }
   .arrow{ font-size:20px; color:var(--ink-faint); margin:0 -2px; padding-bottom:34px; }
+
+  @keyframes pulse-ring{
+    0%{ box-shadow:0 0 0 0 rgba(156,113,89,.35); }
+    70%{ box-shadow:0 0 0 10px rgba(156,113,89,0); }
+    100%{ box-shadow:0 0 0 0 rgba(156,113,89,0); }
+  }
 
   /* two column */
   .cols{
@@ -176,6 +202,7 @@
   .verdict.blocked .tag{ color:var(--sage); }
   .verdict.leaked{ border-color:var(--terracotta); }
   .verdict.leaked .tag{ color:var(--terracotta-dark); }
+  .verdict.current{ box-shadow:0 0 0 3px var(--gold-light); }
   .verdict .headline{ font-family:var(--font-serif); font-size:19px; font-weight:400; color:var(--ink); margin:6px 0 4px; }
   .verdict .sub{ font-size:12.5px; color:var(--ink-faint); line-height:1.4; }
 
@@ -210,13 +237,13 @@
     gap:9px; padding: 22px 0 26px;
     z-index:20;
   }
-  .chrome .step{
+  .chrome .dot{
     width:8px; height:8px; border-radius:50%;
     background:var(--sand-dark); cursor:pointer;
     transition: background .25s ease, transform .25s ease;
     border:none; padding:0;
   }
-  .chrome .step.active{ background:var(--terracotta); transform:scale(1.3); }
+  .chrome .dot.active{ background:var(--terracotta); transform:scale(1.3); }
 
   .counter{
     position:fixed; top:24px; right:28px;
@@ -311,17 +338,17 @@
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Guild.ai is the brain</div></div>
     <h2 class="center">Five agents, real boundaries</h2>
     <div class="pipeline">
-      <div class="agent"><div class="badge">E</div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div></div>
+      <div class="agent reveal"><div class="badge">E</div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent hot"><div class="badge">S</div><div class="name">Skeptic</div><div class="role">Independently verifies, can veto</div></div>
+      <div class="agent reveal"><div class="badge">S</div><div class="name">Skeptic</div><div class="role">Independently verifies, can veto</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent"><div class="badge">I</div><div class="name">Investment Angle</div><div class="role">Decides the re-engagement angle</div></div>
+      <div class="agent reveal"><div class="badge">I</div><div class="name">Investment Angle</div><div class="role">Decides the re-engagement angle</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent"><div class="badge">C</div><div class="name">Citation &amp; Draft</div><div class="role">No citation, no draft</div></div>
+      <div class="agent reveal"><div class="badge">C</div><div class="name">Citation &amp; Draft</div><div class="role">No citation, no draft</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent"><div class="badge">A</div><div class="name">Approval</div><div class="role">Human clicks, or nothing sends</div></div>
+      <div class="agent reveal"><div class="badge">A</div><div class="name">Approval</div><div class="role">Human clicks, or nothing sends</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
     </div>
-    <p class="footnote center maxw" style="margin:6px auto 0;">Boundaries enforced by type signatures, not prompt instructions — each agent's output type makes the wrong move unrepresentable.</p>
+    <p class="footnote center maxw" style="margin:6px auto 0;">Press space to step the council through, one agent at a time — boundaries enforced by type signatures, not prompt instructions.</p>
   </section>
 
   <!-- 6. Why it's real Guild usage -->
@@ -353,35 +380,36 @@
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Skeptic, tier by tier</div></div>
     <h2 class="center">Never fakes success</h2>
     <div class="tier-list">
-      <div class="tier primary">
+      <div class="tier primary reveal">
         <div class="n">1</div>
         <div><div class="t-name">Guild Trigger</div><div class="t-desc">The deployed skeptic-agent — a real Guild.ai session, invoked over its own Trigger key.</div></div>
       </div>
       <div class="tier-sep">&#8595;<span style="font-size:11px; margin-left:6px;">if the call fails</span></div>
-      <div class="tier">
+      <div class="tier reveal">
         <div class="n">2</div>
         <div><div class="t-name">xAI Live Search</div><div class="t-desc">A direct xAI credential Skeptic alone holds — no other agent can reach it.</div></div>
       </div>
       <div class="tier-sep">&#8595;<span style="font-size:11px; margin-left:6px;">if that fails too</span></div>
-      <div class="tier">
+      <div class="tier reveal">
         <div class="n">3</div>
         <div><div class="t-name">Local heuristic</div><div class="t-desc">A deterministic rumor-language check — degrades honestly instead of breaking the demo.</div></div>
       </div>
     </div>
+    <p class="footnote center" style="margin-top:16px;">Space steps through the tiers in the order Skeptic actually tries them.</p>
   </section>
 
   <!-- 8. Kill shot -->
   <section class="slide" data-index="7">
     <div class="eyebrow">The proof</div>
     <h2 class="center">The <code>skeptik</code> kill shot</h2>
-    <p class="lede center">Bypass Skeptic's veto and re-run the same rumor-flavored signal. This is the switch that proves the council is load-bearing, not decorative.</p>
+    <p class="lede center">Press space to flip the switch and re-run the same rumor-flavored signal. This is the proof that the council is load-bearing, not decorative.</p>
     <div class="verdict-row">
-      <div class="verdict blocked">
+      <div class="verdict blocked reveal">
         <div class="tag">Switch off</div>
         <div class="headline">Kelpwork — vetoed</div>
         <div class="sub">Skeptic flags "rumored, unconfirmed" language and blocks it before it reaches Approval.</div>
       </div>
-      <div class="verdict leaked">
+      <div class="verdict leaked reveal">
         <div class="tag">Switch on</div>
         <div class="headline">Kelpwork — reaches Approval</div>
         <div class="sub">Same signal, veto bypassed. Unverified draft slips all the way to the human queue.</div>
@@ -410,7 +438,7 @@
   <!-- 10. Close -->
   <section class="slide" data-index="9">
     <div class="eyebrow">Ember</div>
-    <h2 class="center">Best Use of Guild.ai</h2>
+    <h2 class="center">A council that can say no.</h2>
     <p class="lede center">Five deployed agents. A real veto. A kill switch that proves it. Memory that only acts through a council that can disagree with itself.</p>
     <div class="repo center">Repo: <b>bnisevich/bnisevich-mmm</b></div>
   </section>
@@ -424,32 +452,67 @@
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
   var total = slides.length;
   var current = 0;
+  // per-slide count of how many .reveal elements are currently shown —
+  // this is what lets a slide like the agent pipeline or the kill-shot
+  // switch step through its own sub-states before space advances the deck
+  var revealCount = new Array(total).fill(0);
   var counterEl = document.getElementById('counter');
   var chromeEl = document.getElementById('chrome');
   var hintEl = document.getElementById('hint');
 
   for (var i = 0; i < total; i++) {
     var b = document.createElement('button');
-    b.className = 'step' + (i === 0 ? ' active' : '');
+    b.className = 'dot' + (i === 0 ? ' active' : '');
     b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
     (function(idx){ b.addEventListener('click', function(){ go(idx); }); })(i);
     chromeEl.appendChild(b);
   }
-  var steps = Array.prototype.slice.call(chromeEl.querySelectorAll('.step'));
+  var dots = Array.prototype.slice.call(chromeEl.querySelectorAll('.dot'));
+
+  function revealTotal(i){ return slides[i].querySelectorAll('.reveal').length; }
+
+  function applyReveal(i){
+    var els = slides[i].querySelectorAll('.reveal');
+    var n = revealCount[i];
+    els.forEach(function(el, idx){
+      el.classList.toggle('shown', idx < n);
+      el.classList.toggle('current', idx === n - 1);
+    });
+  }
 
   function render(){
     slides.forEach(function(s, i){ s.classList.toggle('active', i === current); });
-    steps.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+    dots.forEach(function(d, i){ d.classList.toggle('active', i === current); });
     counterEl.textContent = (current + 1) + ' / ' + total;
+    applyReveal(current);
   }
 
   function go(i){
     current = Math.max(0, Math.min(total - 1, i));
+    revealCount[current] = revealTotal(current); // direct jumps land fully revealed
     render();
     history.replaceState(null, '', '#' + (current + 1));
   }
-  function next(){ if (current < total - 1) go(current + 1); }
-  function prev(){ if (current > 0) go(current - 1); }
+
+  function next(){
+    var tot = revealTotal(current);
+    if (revealCount[current] < tot) { revealCount[current]++; applyReveal(current); return; }
+    if (current < total - 1) {
+      current++;
+      revealCount[current] = 0; // arriving forward: build it up from scratch
+      render();
+      history.replaceState(null, '', '#' + (current + 1));
+    }
+  }
+  function prev(){
+    if (revealCount[current] > 0) { revealCount[current]--; applyReveal(current); return; }
+    if (current > 0) {
+      current--;
+      revealCount[current] = revealTotal(current); // arriving backward: show its end state
+      render();
+      history.replaceState(null, '', '#' + (current + 1));
+    }
+  }
 
   function dismissHint(){
     if (hintEl && !hintEl.classList.contains('hidden')) hintEl.classList.add('hidden');
@@ -477,6 +540,7 @@
 
   var startAt = parseInt((location.hash || '').replace('#', ''), 10);
   if (!isNaN(startAt) && startAt >= 1 && startAt <= total) current = startAt - 1;
+  revealCount[current] = revealTotal(current);
   render();
 })();
 </script>
