@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "guild-agents"]
+  "exclude": [
+    "node_modules",
+    "guild-agents",
+    "approval-agent",
+    "citation-draft-agent",
+    "eligibility-agent",
+    "investment-angle-agent",
+    "skeptic-agent"
+  ]
 }
