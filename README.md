@@ -2,6 +2,8 @@
 
 The living deal-flow layer: a graph that remembers why a deal died, resurfaces it when a new signal lands, and only acts through agents with a human approval gate. Built for the "Memory Meets Motion" mandatory-stack requirement — see [PRDMVP.md](PRDMVP.md) for the product spec and demo script.
 
+**Live:** [ember-psi-taupe.vercel.app](https://ember-psi-taupe.vercel.app)
+
 ## Quick start
 
 ```bash
