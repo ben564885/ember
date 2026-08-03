@@ -136,13 +136,13 @@
     width:150px;
   }
   .agent .badge{
-    width:60px; height:60px; border-radius:50%;
+    width:60px; height:60px; border-radius:50%; overflow:hidden;
     background:var(--cream-card); border:1.5px solid var(--sand-dark);
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-serif); font-size:26px; font-style:italic; color:var(--ink-soft);
     box-shadow: 0 1px 0 rgba(58,46,39,.03);
     transition: border-color .3s ease, background .3s ease, color .3s ease, box-shadow .3s ease;
   }
+  .agent .badge img{ width:100%; height:100%; object-fit:cover; display:block; }
   .agent.current .badge{
     border-color:var(--terracotta); background:var(--gold-light); color:var(--terracotta-dark);
     animation: pulse-ring 1.3s ease-out infinite;
@@ -338,15 +338,15 @@
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Guild.ai is the brain</div></div>
     <h2 class="center">Five agents, real boundaries</h2>
     <div class="pipeline">
-      <div class="agent reveal"><div class="badge">E</div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
+      <div class="agent reveal"><div class="badge"><img src="assets/guild.jpeg" alt="Guild.ai"></div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent reveal"><div class="badge">S</div><div class="name">Skeptic</div><div class="role">Independently verifies, can veto</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
+      <div class="agent reveal"><div class="badge"><img src="assets/guild.jpeg" alt="Guild.ai"></div><div class="name">Skeptic</div><div class="role">Independently verifies, can veto</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent reveal"><div class="badge">I</div><div class="name">Investment Angle</div><div class="role">Decides the re-engagement angle</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
+      <div class="agent reveal"><div class="badge"><img src="assets/guild.jpeg" alt="Guild.ai"></div><div class="name">Investment Angle</div><div class="role">Decides the re-engagement angle</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent reveal"><div class="badge">C</div><div class="name">Citation &amp; Draft</div><div class="role">No citation, no draft</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
+      <div class="agent reveal"><div class="badge"><img src="assets/guild.jpeg" alt="Guild.ai"></div><div class="name">Citation &amp; Draft</div><div class="role">No citation, no draft</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
       <div class="arrow">&#8594;</div>
-      <div class="agent reveal"><div class="badge">A</div><div class="name">Approval</div><div class="role">Human clicks, or nothing sends</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
+      <div class="agent reveal"><div class="badge"><img src="assets/guild.jpeg" alt="Guild.ai"></div><div class="name">Approval</div><div class="role">Human clicks, or nothing sends</div><div class="status"><span class="running">running</span><span class="done">done</span></div></div>
     </div>
     <p class="footnote center maxw" style="margin:6px auto 0;">Press space to step the council through, one agent at a time — boundaries enforced by type signatures, not prompt instructions.</p>
   </section>
