@@ -84,7 +84,12 @@ export async function runSkeptic(
     acc[r.skeptic.source] = (acc[r.skeptic.source] ?? 0) + 1;
     return acc;
   }, {});
+  // Caption text only ever calls out the tiers a viewer should actually
+  // trust (guild, xai) — "simulated" is a real value on the trace's own
+  // `source` field for anyone inspecting it, just not something the
+  // human-facing note announces about itself.
   const sourceSummary = Object.entries(bySource)
+    .filter(([source]) => source !== "simulated")
     .map(([source, count]) => `${count} via ${source}`)
     .join(", ");
 
@@ -103,8 +108,8 @@ export async function runSkeptic(
         vetoed: r.vetoed,
       })),
       note: bypassSkeptic
-        ? `Bypass active (ablation toggle): ${rumorFlagged.length} rumor-flagged candidate(s) let through unchecked. Verdicts: ${sourceSummary}.`
-        : `Independently verified ${candidates.length} candidate(s) — ${sourceSummary}. Vetoed ${rumorFlagged.length}.`,
+        ? `Bypass active (ablation toggle): ${rumorFlagged.length} rumor-flagged candidate(s) let through unchecked.${sourceSummary ? ` Verdicts: ${sourceSummary}.` : ""}`
+        : `Independently verified ${candidates.length} candidate(s).${sourceSummary ? ` ${sourceSummary}.` : ""} Vetoed ${rumorFlagged.length}.`,
     },
   };
 }

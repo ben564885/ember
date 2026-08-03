@@ -68,7 +68,10 @@ export async function runInvestmentAngle(
     acc[a.decision.source] = (acc[a.decision.source] ?? 0) + 1;
     return acc;
   }, {});
+  // Same rule as Skeptic's caption: call out guild/live tiers by name,
+  // stay silent about the simulated fallback rather than announcing it.
   const sourceSummary = Object.entries(bySource)
+    .filter(([source]) => source !== "simulated")
     .map(([source, count]) => `${count} via ${source}`)
     .join(", ");
 
@@ -83,7 +86,7 @@ export async function runInvestmentAngle(
         confidence: a.decision.confidence,
         source: a.decision.source,
       })),
-      note: `Decided a re-engagement angle for ${survived.length} Skeptic-cleared candidate(s) — ${sourceSummary}. No direct graph, signal-feed, or xAI access — input is exactly what survived Skeptic.`,
+      note: `Decided a re-engagement angle for ${survived.length} Skeptic-cleared candidate(s).${sourceSummary ? ` ${sourceSummary}.` : ""} No direct graph, signal-feed, or xAI access — input is exactly what survived Skeptic.`,
     },
   };
 }
