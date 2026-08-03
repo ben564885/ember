@@ -16,7 +16,6 @@ const toggles: { key: keyof AblationStateDTO; label: string; icon: typeof Clock;
 interface EmailModalState {
   key: string;
   startupName: string;
-  approved: boolean;
 }
 
 /**
@@ -24,30 +23,11 @@ interface EmailModalState {
  * lib/slack/notify.ts) — the demo story is about the email a VC would see
  * land, so this pops up over the whole screen instead of sitting quietly in
  * the table row, the same way the deck's reheat-thread.png gets its own
- * moment rather than being a thumbnail in a list. `approved` (set once
- * /api/run/approve actually resolves) gates the "sending" -> "sent" step;
- * the modal only ever opens for a fresh approve click, so there's no
- * "already approved on mount" case to special-case here.
+ * moment rather than being a thumbnail in a list. Only opens once
+ * /api/run/approve has actually resolved, so it never renders a "sent"
+ * state before that's true.
  */
 function EmailSentModal({ modal, onClose }: { modal: EmailModalState | null; onClose: () => void }) {
-  const [stage, setStage] = useState<"sending" | "sent" | "shown">("sending");
-
-  useEffect(() => {
-    if (modal) setStage("sending");
-  }, [modal?.key]);
-
-  useEffect(() => {
-    if (!modal?.approved || stage !== "sending") return;
-    const t = setTimeout(() => setStage("sent"), 900);
-    return () => clearTimeout(t);
-  }, [modal?.approved, stage]);
-
-  useEffect(() => {
-    if (stage !== "sent") return;
-    const t = setTimeout(() => setStage("shown"), 1100);
-    return () => clearTimeout(t);
-  }, [stage]);
-
   if (!modal) return null;
 
   return (
@@ -67,27 +47,16 @@ function EmailSentModal({ modal, onClose }: { modal: EmailModalState | null; onC
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
-        <p className={`flex items-center gap-2 text-xs ${stage === "sending" ? "text-ink-faint" : "text-sage"}`}>
-          {stage === "sending" ? (
-            <>
-              <span className="h-2 w-2 animate-pulse rounded-full bg-terracotta" />
-              Sending email with Gmail…
-            </>
-          ) : (
-            "✓ Email sent"
-          )}
-        </p>
-        {stage === "shown" && (
-          <div className="mt-3 overflow-hidden rounded-lg border border-sand-dark">
-            <Image
-              src="/examples/gmail-reengagement-example.png"
-              alt="Example re-engagement email sent via Gmail"
-              width={1182}
-              height={964}
-              className="h-auto w-full"
-            />
-          </div>
-        )}
+        <p className="text-xs text-sage">✓ Email sent</p>
+        <div className="mt-3 overflow-hidden rounded-lg border border-sand-dark">
+          <Image
+            src="/examples/gmail-reengagement-example.png"
+            alt="Example re-engagement email sent via Gmail"
+            width={1182}
+            height={964}
+            className="h-auto w-full"
+          />
+        </div>
       </div>
     </div>
   );
@@ -153,10 +122,6 @@ export function Council() {
 
   async function act(key: string, action: "approve" | "reject") {
     setBusy({ key, action });
-    if (action === "approve") {
-      const startupName = queue.find((q) => q.key === key)?.startupName ?? "";
-      setEmailModal({ key, startupName, approved: false });
-    }
     try {
       const res = await fetch(`/api/run/${action}`, {
         method: "POST",
@@ -167,7 +132,7 @@ export function Council() {
       if (data.ok) {
         setQueue((q) => q.map((e) => (e.key === key ? data.entry : e)));
         if (action === "approve") {
-          setEmailModal((m) => (m && m.key === key ? { ...m, approved: true } : m));
+          setEmailModal({ key, startupName: data.entry.startupName });
         }
       }
     } finally {
