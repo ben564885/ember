@@ -32,3 +32,24 @@
 body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+@keyframes check-circle-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes check-mark-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

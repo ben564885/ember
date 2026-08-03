@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import { Clock, AlertTriangle, Ban, X } from "lucide-react";
 import type { AblationStateDTO, AgentTraceStepDTO, ApprovalEntryDTO, VetoedCandidateDTO } from "@/lib/client-types";
 import { AgentPipelineStrip } from "./AgentPipelineStrip";
@@ -19,13 +18,38 @@ interface EmailModalState {
 }
 
 /**
+ * Circle pops in first (check-circle-pop), then the check stroke draws in
+ * after a short delay (check-mark-draw) — the two keyframes are defined
+ * globally in globals.css since Tailwind has no utility for a dasharray
+ * stroke animation.
+ */
+function AnimatedCheck() {
+  return (
+    <svg viewBox="0 0 52 52" className="h-14 w-14" style={{ animation: "check-circle-pop 0.4s ease-out" }}>
+      <circle cx="26" cy="26" r="24" fill="none" stroke="var(--color-sage)" strokeWidth="3" />
+      <path
+        d="M14 27l7 7 16-16"
+        fill="none"
+        stroke="var(--color-sage)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{
+          strokeDasharray: 40,
+          strokeDashoffset: 40,
+          animation: "check-mark-draw 0.35s ease-out 0.35s forwards",
+        }}
+      />
+    </svg>
+  );
+}
+
+/**
  * Approving a draft actually posts to a Slack webhook under the hood (see
- * lib/slack/notify.ts) — the demo story is about the email a VC would see
- * land, so this pops up over the whole screen instead of sitting quietly in
- * the table row, the same way the deck's reheat-thread.png gets its own
- * moment rather than being a thumbnail in a list. Only opens once
- * /api/run/approve has actually resolved, so it never renders a "sent"
- * state before that's true.
+ * lib/slack/notify.ts) — the demo story is about the email a VC would
+ * actually see land, so this pops up over the whole screen rather than
+ * sitting quietly in the table row. Only opens once /api/run/approve has
+ * actually resolved, so it never renders a "sent" state before that's true.
  */
 function EmailSentModal({ modal, onClose }: { modal: EmailModalState | null; onClose: () => void }) {
   if (!modal) return null;
@@ -38,24 +62,22 @@ function EmailSentModal({ modal, onClose }: { modal: EmailModalState | null; onC
       aria-modal="true"
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-sand-dark bg-cream-card p-5 shadow-xl"
+        className="relative w-full max-w-xs rounded-2xl border border-sand-dark bg-cream-card p-8 text-center shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-ink">{modal.startupName}</h3>
-          <button onClick={onClose} title="Close" className="text-ink-faint transition hover:text-ink">
-            <X className="h-4 w-4" strokeWidth={2} />
-          </button>
-        </div>
-        <p className="text-xs text-sage">✓ Email sent</p>
-        <div className="mt-3 overflow-hidden rounded-lg border border-sand-dark">
-          <Image
-            src="/examples/gmail-reengagement-example.png"
-            alt="Example re-engagement email sent via Gmail"
-            width={1182}
-            height={964}
-            className="h-auto w-full"
-          />
+        <button
+          onClick={onClose}
+          title="Close"
+          className="absolute right-3 top-3 text-ink-faint transition hover:text-ink"
+        >
+          <X className="h-4 w-4" strokeWidth={2} />
+        </button>
+        <div className="flex flex-col items-center gap-3">
+          <AnimatedCheck />
+          <div>
+            <p className="text-xs text-ink-faint">{modal.startupName}</p>
+            <p className="mt-0.5 text-base font-semibold text-ink">Sent with Gmail</p>
+          </div>
         </div>
       </div>
     </div>
