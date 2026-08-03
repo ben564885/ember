@@ -46,6 +46,8 @@
 // deployed) just means that stage quietly falls back to its next tier, not
 // a broken demo.
 
+import { FORCE_SIMULATED_TIERS } from "@/lib/demo-speed";
+
 export type GuildPlatformMode = "live" | "simulated";
 
 /**
@@ -188,6 +190,8 @@ export async function callGuildAgent<Out>(
   input: Record<string, unknown>,
   isValidOutput: (o: unknown) => o is Out,
 ): Promise<Out | null> {
+  if (FORCE_SIMULATED_TIERS) return null;
+
   const url = sessionsUrl();
   const auth = authHeader(agentName);
   if (!url || !auth) return null;

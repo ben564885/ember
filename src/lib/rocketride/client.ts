@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import type { ResurfacedCandidate } from "@/lib/graph/queries";
+import { FORCE_SIMULATED_TIERS } from "@/lib/demo-speed";
 
 // Real `rocketride` npm client, wired to run against either RocketRide
 // Cloud (ROCKETRIDE_APIKEY, no ROCKETRIDE_URI set — SDK defaults to
@@ -243,6 +244,8 @@ function parsePipelineResult(
  * since they now run concurrently but each still needs its own ceiling.
  */
 export async function runPipelineLive(candidate: ResurfacedCandidate): Promise<PipelineRunResult | null> {
+  if (FORCE_SIMULATED_TIERS) return null;
+
   const mode = await resolveMode();
   if (mode !== "live") return null;
 

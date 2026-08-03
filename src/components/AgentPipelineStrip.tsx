@@ -54,7 +54,7 @@ export function AgentPipelineStrip({ trace, loading }: { trace: AgentTraceStepDT
         }
         return r + 1;
       });
-    }, 450);
+    }, 3000);
     return () => clearInterval(id);
   }, [trace]);
 

@@ -16,6 +16,8 @@
 // contract as every other integration in this app: flip XAI_API_KEY on and
 // the status bar will say exactly what actually happened.
 
+import { FORCE_SIMULATED_TIERS } from "@/lib/demo-speed";
+
 export type XaiMode = "live" | "simulated";
 
 let resolvedMode: XaiMode | null = null;
@@ -79,6 +81,8 @@ export async function verifySignalOnX(params: {
   startupName: string;
   headline: string;
 }): Promise<XaiVerification | null> {
+  if (FORCE_SIMULATED_TIERS) return null;
+
   const mode = await resolveMode();
   if (mode !== "live") return null;
 
