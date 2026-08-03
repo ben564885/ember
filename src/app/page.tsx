@@ -32,7 +32,7 @@ export default function Landing() {
         </span>
         <TypewriterTitle />
         <p className="mt-5 max-w-lg text-base text-neutral-200 sm:text-lg">
-          The deal-flow graph that watches for the moment a pass is worth another look.
+          For VCs who don&rsquo;t want to miss a deal twice — the deal-flow graph that reheats a pass the moment it&rsquo;s worth another look.
         </p>
 
         <Link
