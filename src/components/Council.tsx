@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Clock, AlertTriangle, Ban } from "lucide-react";
+import Image from "next/image";
+import { Clock, AlertTriangle, Ban, X } from "lucide-react";
 import type { AblationStateDTO, AgentTraceStepDTO, ApprovalEntryDTO, VetoedCandidateDTO } from "@/lib/client-types";
 import { AgentPipelineStrip } from "./AgentPipelineStrip";
 import { CandidateTable, mergeCandidateRows } from "./CandidateTable";
@@ -11,6 +12,86 @@ const toggles: { key: keyof AblationStateDTO; label: string; icon: typeof Clock;
   { key: "forceTypeMismatch", label: "reason", icon: AlertTriangle, description: "Forces a wrong signal type on the next ingested live signal — Citation & Draft should decline it." },
   { key: "bypassSkeptic", label: "skeptik", icon: Ban, description: "Bypasses Skeptic's veto — the rumor-flagged draft should reach Approval unchecked." },
 ];
+
+interface EmailModalState {
+  key: string;
+  startupName: string;
+  approved: boolean;
+}
+
+/**
+ * Approving a draft actually posts to a Slack webhook under the hood (see
+ * lib/slack/notify.ts) — the demo story is about the email a VC would see
+ * land, so this pops up over the whole screen instead of sitting quietly in
+ * the table row, the same way the deck's reheat-thread.png gets its own
+ * moment rather than being a thumbnail in a list. `approved` (set once
+ * /api/run/approve actually resolves) gates the "sending" -> "sent" step;
+ * the modal only ever opens for a fresh approve click, so there's no
+ * "already approved on mount" case to special-case here.
+ */
+function EmailSentModal({ modal, onClose }: { modal: EmailModalState | null; onClose: () => void }) {
+  const [stage, setStage] = useState<"sending" | "sent" | "shown">("sending");
+
+  useEffect(() => {
+    if (modal) setStage("sending");
+  }, [modal?.key]);
+
+  useEffect(() => {
+    if (!modal?.approved || stage !== "sending") return;
+    const t = setTimeout(() => setStage("sent"), 900);
+    return () => clearTimeout(t);
+  }, [modal?.approved, stage]);
+
+  useEffect(() => {
+    if (stage !== "sent") return;
+    const t = setTimeout(() => setStage("shown"), 1100);
+    return () => clearTimeout(t);
+  }, [stage]);
+
+  if (!modal) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-sand-dark bg-cream-card p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-ink">{modal.startupName}</h3>
+          <button onClick={onClose} title="Close" className="text-ink-faint transition hover:text-ink">
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+        <p className={`flex items-center gap-2 text-xs ${stage === "sending" ? "text-ink-faint" : "text-sage"}`}>
+          {stage === "sending" ? (
+            <>
+              <span className="h-2 w-2 animate-pulse rounded-full bg-terracotta" />
+              Sending email with Gmail…
+            </>
+          ) : (
+            "✓ Email sent"
+          )}
+        </p>
+        {stage === "shown" && (
+          <div className="mt-3 overflow-hidden rounded-lg border border-sand-dark">
+            <Image
+              src="/examples/gmail-reengagement-example.png"
+              alt="Example re-engagement email sent via Gmail"
+              width={1182}
+              height={964}
+              className="h-auto w-full"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * The whole "prove Guild is load-bearing" story lives on this one screen:
@@ -25,6 +106,7 @@ export function Council() {
   const [trace, setTrace] = useState<AgentTraceStepDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<{ key: string; action: "approve" | "reject" } | null>(null);
+  const [emailModal, setEmailModal] = useState<EmailModalState | null>(null);
   const [ablation, setAblation] = useState<AblationStateDTO | null>(null);
   const [toggleBusy, setToggleBusy] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
@@ -71,6 +153,10 @@ export function Council() {
 
   async function act(key: string, action: "approve" | "reject") {
     setBusy({ key, action });
+    if (action === "approve") {
+      const startupName = queue.find((q) => q.key === key)?.startupName ?? "";
+      setEmailModal({ key, startupName, approved: false });
+    }
     try {
       const res = await fetch(`/api/run/${action}`, {
         method: "POST",
@@ -80,6 +166,9 @@ export function Council() {
       const data = await res.json();
       if (data.ok) {
         setQueue((q) => q.map((e) => (e.key === key ? data.entry : e)));
+        if (action === "approve") {
+          setEmailModal((m) => (m && m.key === key ? { ...m, approved: true } : m));
+        }
       }
     } finally {
       setBusy(null);
@@ -136,6 +225,8 @@ export function Council() {
         </div>
         <p className="mt-2 text-[10px] text-ink-faint">Edge severing lives in the Kill shot section — it&rsquo;s a real graph mutation, not a toggle.</p>
       </div>
+
+      <EmailSentModal modal={emailModal} onClose={() => setEmailModal(null)} />
     </div>
   );
 }

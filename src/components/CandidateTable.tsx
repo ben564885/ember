@@ -132,70 +132,6 @@ function statusChip(row: CandidateRow): { label: string; className: string } {
   return { label: "Rejected by you", className: "bg-sand-dark text-ink-soft" };
 }
 
-/**
- * The re-engagement "motion" step, reframed around the email a human would
- * actually see land (see public/examples/gmail-reengagement-example.png)
- * rather than the Slack webhook this fires under the hood — same demo
- * pattern as the deck's reheat-thread.png. `approved` alone (not
- * `isSendingApprove`) drives the initial stage so a candidate that was
- * already approved before this component mounted (e.g. on page reload)
- * renders the resting "shown" state immediately instead of replaying the
- * send animation.
- */
-function ApprovalMotion({ isSendingApprove, approved }: { isSendingApprove: boolean; approved: boolean }) {
-  const [stage, setStage] = useState<"idle" | "sending" | "sent" | "shown">(approved ? "shown" : "idle");
-
-  useEffect(() => {
-    if (isSendingApprove) setStage((s) => (s === "idle" ? "sending" : s));
-  }, [isSendingApprove]);
-
-  useEffect(() => {
-    if (stage !== "sending" || !approved) return;
-    const t = setTimeout(() => setStage("sent"), 900);
-    return () => clearTimeout(t);
-  }, [stage, approved]);
-
-  useEffect(() => {
-    if (stage !== "sent") return;
-    const t = setTimeout(() => setStage("shown"), 1100);
-    return () => clearTimeout(t);
-  }, [stage]);
-
-  if (stage === "idle") return null;
-
-  return (
-    <div className="mt-1 space-y-1">
-      <p className={`flex items-center gap-1 text-[10px] ${stage === "sending" ? "text-ink-faint" : "text-sage"}`}>
-        {stage === "sending" ? (
-          <>
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
-            Sending email with Gmail…
-          </>
-        ) : (
-          "✓ Email sent"
-        )}
-      </p>
-      {stage === "shown" && (
-        <a
-          href="/examples/gmail-reengagement-example.png"
-          target="_blank"
-          rel="noreferrer"
-          className="block w-32 overflow-hidden rounded-md border border-sand-dark shadow-sm transition hover:opacity-90"
-          title="Example re-engagement email"
-        >
-          <Image
-            src="/examples/gmail-reengagement-example.png"
-            alt="Example re-engagement email sent via Gmail"
-            width={1182}
-            height={964}
-            className="h-auto w-full"
-          />
-        </a>
-      )}
-    </div>
-  );
-}
-
 function initials(name: string): string {
   return name
     .split(/\s+/)
@@ -328,12 +264,6 @@ export function CandidateTable({
                         <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                       </button>
                     </div>
-                  )}
-                  {(row.approval?.motion || (busy?.key === row.key && busy.action === "approve")) && (
-                    <ApprovalMotion
-                      isSendingApprove={busy?.key === row.key && busy.action === "approve"}
-                      approved={row.approval?.approvalStatus === "approved"}
-                    />
                   )}
                 </td>
               </tr>
