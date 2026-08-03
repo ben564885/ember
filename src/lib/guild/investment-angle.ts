@@ -78,6 +78,7 @@ export async function runInvestmentAngle(
       agent: "Investment Angle",
       input: { candidateCount: survived.length },
       output: analyzed.map((a) => ({
+        key: a.candidate.key,
         startupId: a.candidate.startupId,
         confidence: a.decision.confidence,
         source: a.decision.source,

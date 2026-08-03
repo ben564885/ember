@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Check, X } from "lucide-react";
-import type { ApprovalEntryDTO, VetoedCandidateDTO } from "@/lib/client-types";
+import type { AgentTraceStepDTO, ApprovalEntryDTO, VetoedCandidateDTO } from "@/lib/client-types";
 
 export interface CandidateRow {
   key: string;
@@ -14,11 +15,45 @@ export interface CandidateRow {
   skepticVerdict?: "confirmed" | "rumor";
   skepticSource?: "guild" | "xai" | "simulated";
   skepticReasoning?: string;
+  investmentAngleSource?: "guild" | "live" | "simulated";
+  citationDraftSource?: "provided" | "guild" | "rebuilt";
   approval?: ApprovalEntryDTO;
 }
 
-export function mergeCandidateRows(queue: ApprovalEntryDTO[], vetoed: VetoedCandidateDTO[]): CandidateRow[] {
+/**
+ * Trace step `output` is `unknown` on the wire (see AgentTraceStepDTO) —
+ * each stage's shape is only known by convention, not enforced end to end.
+ * These pull just the `key`/`source` pair each stage's own guild/*.ts
+ * actually emits (see investment-angle.ts and citation-draft.ts), so a
+ * shape drift there fails closed to "no badge" instead of a runtime crash.
+ */
+function sourceByKey(step: AgentTraceStepDTO | undefined): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!step || !Array.isArray(step.output)) return map;
+  for (const o of step.output) {
+    if (o && typeof o === "object" && "key" in o && "source" in o) {
+      const { key, source } = o as { key: unknown; source: unknown };
+      if (typeof key === "string" && typeof source === "string") map.set(key, source);
+    }
+  }
+  return map;
+}
+
+export function mergeCandidateRows(
+  queue: ApprovalEntryDTO[],
+  vetoed: VetoedCandidateDTO[],
+  trace: AgentTraceStepDTO[] = [],
+): CandidateRow[] {
   const rows = new Map<string, CandidateRow>();
+  // The `vetoed` prop only carries rumor-flagged candidates (see
+  // orchestrate.ts / skeptic.ts) — it's where skepticReasoning comes from,
+  // since that sentence only matters for the ones actually flagged. But
+  // Skeptic runs on *every* candidate, and its full per-candidate trace
+  // step (unlike `vetoed`) has all of them, so the "via guild" badge
+  // itself is derived from there, not from `vetoed`.
+  const skepticSources = sourceByKey(trace.find((s) => s.agent === "Skeptic"));
+  const angleSources = sourceByKey(trace.find((s) => s.agent === "Investment Angle"));
+  const draftSources = sourceByKey(trace.find((s) => s.agent === "Citation & Draft"));
 
   for (const v of vetoed) {
     rows.set(v.candidate.key, {
@@ -31,6 +66,8 @@ export function mergeCandidateRows(queue: ApprovalEntryDTO[], vetoed: VetoedCand
       skepticVerdict: v.skeptic.verdict,
       skepticSource: v.skeptic.source,
       skepticReasoning: v.skeptic.reasoning,
+      investmentAngleSource: angleSources.get(v.candidate.key) as CandidateRow["investmentAngleSource"],
+      citationDraftSource: draftSources.get(v.candidate.key) as CandidateRow["citationDraftSource"],
     });
   }
 
@@ -44,8 +81,10 @@ export function mergeCandidateRows(queue: ApprovalEntryDTO[], vetoed: VetoedCand
       signalHeadline: q.signalHeadline,
       vetoed: existing?.vetoed ?? false,
       skepticVerdict: existing?.skepticVerdict,
-      skepticSource: existing?.skepticSource,
+      skepticSource: existing?.skepticSource ?? (skepticSources.get(q.key) as CandidateRow["skepticSource"]),
       skepticReasoning: existing?.skepticReasoning,
+      investmentAngleSource: existing?.investmentAngleSource ?? (angleSources.get(q.key) as CandidateRow["investmentAngleSource"]),
+      citationDraftSource: existing?.citationDraftSource ?? (draftSources.get(q.key) as CandidateRow["citationDraftSource"]),
       approval: q,
     });
   }
@@ -55,6 +94,32 @@ export function mergeCandidateRows(queue: ApprovalEntryDTO[], vetoed: VetoedCand
   const rank = (r: CandidateRow) =>
     r.approval?.approvalStatus === "pending" ? 0 : r.vetoed ? 1 : r.approval?.approvalStatus === "approved" ? 2 : 3;
   return Array.from(rows.values()).sort((a, b) => rank(a) - rank(b));
+}
+
+/**
+ * A visible per-stage "this candidate actually hit Guild.ai" tag — the
+ * server trace already knows this (see sourceByKey above), it just wasn't
+ * shown anywhere before. Only Skeptic, Investment Angle, and Citation &
+ * Draft call out to Guild; Eligibility and Approval don't appear here.
+ */
+function SourceBadge({ label, source }: { label: string; source?: string }) {
+  if (!source) return null;
+  const isGuild = source === "guild";
+  return (
+    <span
+      title={`${label}: via ${source}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-medium ${
+        isGuild ? "border-terracotta/40 bg-sand text-terracotta-dark" : "border-sand-dark bg-sand/40 text-ink-faint"
+      }`}
+    >
+      {isGuild && (
+        <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full">
+          <Image src="/logos/guild.jpeg" alt="Guild" fill sizes="12px" className="object-cover" />
+        </span>
+      )}
+      {label}
+    </span>
+  );
 }
 
 function statusChip(row: CandidateRow): { label: string; className: string } {
@@ -168,9 +233,13 @@ export function CandidateTable({
                   <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${chip.className}`}>
                     {chip.label}
                   </span>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    <SourceBadge label="Skeptic" source={row.skepticSource} />
+                    <SourceBadge label="Angle" source={row.investmentAngleSource} />
+                    <SourceBadge label="Draft" source={row.citationDraftSource} />
+                  </div>
                   {row.skepticReasoning && (
                     <p className="mt-1 max-w-[240px] text-[10px] text-ink-faint" title={row.skepticReasoning}>
-                      {row.skepticSource ? `via ${row.skepticSource} — ` : ""}
                       {row.skepticReasoning}
                     </p>
                   )}

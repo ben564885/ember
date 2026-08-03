@@ -96,6 +96,7 @@ export async function runSkeptic(
       agent: "Skeptic",
       input: { candidateCount: candidates.length },
       output: results.map((r) => ({
+        key: r.candidate.key,
         startupId: r.candidate.startupId,
         verdict: r.skeptic.verdict,
         source: r.skeptic.source,

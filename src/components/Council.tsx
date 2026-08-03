@@ -86,7 +86,7 @@ export function Council() {
     }
   }
 
-  const rows = mergeCandidateRows(queue, vetoed);
+  const rows = mergeCandidateRows(queue, vetoed, trace);
 
   return (
     <div className="space-y-4">

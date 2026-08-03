@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { FileCheck2 } from "lucide-react";
 import type { AgentTraceStepDTO } from "@/lib/client-types";
 
-const AGENTS: { name: AgentTraceStepDTO["agent"]; icon: string }[] = [
+// The citation-draft.png source (a black pen on near-black paper) has no
+// usable contrast once scaled to a 32px icon — it renders as a solid dark
+// blob, confirmed by rendering it and by an autocontrast pass on the
+// original that still couldn't separate the pen from the paper. Falls back
+// to a lucide icon for this one stage only; swap in a higher-contrast
+// custom icon here if one becomes available.
+const AGENTS: { name: AgentTraceStepDTO["agent"]; icon: string | typeof FileCheck2 }[] = [
   { name: "Eligibility", icon: "/agent-icons/eligibility.png" },
   { name: "Skeptic", icon: "/agent-icons/skeptic.png" },
   { name: "Investment Angle", icon: "/agent-icons/investment-angle.png" },
-  { name: "Citation & Draft", icon: "/agent-icons/citation-draft.png" },
+  { name: "Citation & Draft", icon: FileCheck2 },
   { name: "Approval", icon: "/agent-icons/approval.png" },
 ];
 
@@ -74,8 +81,12 @@ export function AgentPipelineStrip({ trace, loading }: { trace: AgentTraceStepDT
                           : "border-sand-dark bg-sand"
                   }`}
                 >
-                  <div className="relative h-8 w-8 overflow-hidden rounded-full bg-white">
-                    <Image src={agent.icon} alt={agent.name} fill sizes="32px" className="object-contain p-1" />
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-white">
+                    {typeof agent.icon === "string" ? (
+                      <Image src={agent.icon} alt={agent.name} width={32} height={32} className="object-contain p-1" />
+                    ) : (
+                      <agent.icon className="h-5 w-5 text-terracotta" strokeWidth={2} />
+                    )}
                   </div>
                   {veto && (
                     <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-cream-card bg-terracotta" />
