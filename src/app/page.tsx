@@ -4,9 +4,9 @@ import TypewriterTitle from "@/components/TypewriterTitle";
 
 const SPONSORS = [
   { name: "FalkorDB", src: "/logos/falkor.svg" },
-  { name: "Guild", src: "/logos/guild.png" },
-  { name: "LaserData", src: "/logos/laserdata.png" },
-  { name: "RocketRide", src: "/logos/rocketride.png" },
+  { name: "Guild", src: "/logos/guild.jpeg" },
+  { name: "LaserData", src: "/logos/laserdata.jpeg" },
+  { name: "RocketRide", src: "/logos/rocketride.jpeg" },
 ];
 
 export default function Landing() {
@@ -27,7 +27,7 @@ export default function Landing() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
 
       <div className="relative flex h-full w-full flex-col items-center justify-center px-6 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">
+        <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-light">
           Memory meets motion · 2026
         </span>
         <TypewriterTitle />
@@ -37,7 +37,7 @@ export default function Landing() {
 
         <Link
           href="/app"
-          className="mt-10 inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/40 transition hover:bg-blue-500"
+          className="mt-10 inline-flex items-center gap-2 rounded-full bg-terracotta px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-black/40 transition hover:bg-terracotta-dark"
         >
           Judges click here
           <span aria-hidden="true">→</span>

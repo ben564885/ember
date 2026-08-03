@@ -1,29 +1,34 @@
-import { runSourcer } from "./sourcer";
-import { runAnalyst } from "./analyst";
-import { runOutreach } from "./outreach";
-import { runGatekeeper } from "./gatekeeper";
-import type { AgentTraceStep, GatekeeperOutput } from "./types";
+import { runEligibility } from "./eligibility";
+import { runSkeptic } from "./skeptic";
+import { runInvestmentAngle } from "./investment-angle";
+import { runCitationDraft } from "./citation-draft";
+import { runApproval } from "./approval";
+import type { AgentTraceStep, ApprovalEntry, SkepticOutput } from "./types";
 
 export interface OrchestrationResult {
-  queued: GatekeeperOutput[];
+  queued: ApprovalEntry[];
+  vetoed: SkepticOutput[];
   trace: AgentTraceStep[];
 }
 
-/** Runs the full Sourcer -> Analyst -> Outreach -> Gatekeeper chain once. */
+/** Runs the full Eligibility -> Skeptic -> Investment Angle -> Citation & Draft -> Approval chain once. */
 export async function runFullPipeline(): Promise<OrchestrationResult> {
   const trace: AgentTraceStep[] = [];
 
-  const { candidates, trace: sourcerTrace } = await runSourcer();
-  trace.push(sourcerTrace);
+  const { candidates, trace: eligibilityTrace } = await runEligibility();
+  trace.push(eligibilityTrace);
 
-  const { analyzed, trace: analystTrace } = await runAnalyst(candidates);
-  trace.push(analystTrace);
+  const { survived, vetoed, trace: skepticTrace } = await runSkeptic(candidates);
+  trace.push(skepticTrace);
 
-  const { outputs, trace: outreachTrace } = runOutreach(analyzed);
-  trace.push(outreachTrace);
+  const { analyzed, trace: investmentTrace } = await runInvestmentAngle(survived);
+  trace.push(investmentTrace);
 
-  const { queued, trace: gatekeeperTrace } = runGatekeeper(outputs);
-  trace.push(gatekeeperTrace);
+  const { outputs, trace: draftTrace } = await runCitationDraft(analyzed);
+  trace.push(draftTrace);
 
-  return { queued, trace };
+  const { queued, trace: approvalTrace } = runApproval(outputs);
+  trace.push(approvalTrace);
+
+  return { queued, vetoed, trace };
 }

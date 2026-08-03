@@ -1,35 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import type { StatusDTO } from "@/lib/client-types";
 
-type Row = { label: string; endpoint: string; alwaysLive?: boolean };
+type Row = { label: string; endpoint: string; logo: string };
 
 const rows: Row[] = [
-  { label: "FalkorDB", endpoint: "/api/graph/status" },
-  { label: "LaserData", endpoint: "/api/signals/status" },
-  { label: "RocketRide", endpoint: "/api/rocketride/status" },
+  { label: "FalkorDB", endpoint: "/api/graph/status", logo: "/logos/falkor.svg" },
+  { label: "LaserData", endpoint: "/api/signals/status", logo: "/logos/laserdata.jpeg" },
+  { label: "RocketRide", endpoint: "/api/rocketride/status", logo: "/logos/rocketride.jpeg" },
+  { label: "Guild", endpoint: "/api/guild/status", logo: "/logos/guild.jpeg" },
 ];
-
-function Pill({ label, status }: { label: string; status: StatusDTO | null }) {
-  const mode = status?.mode ?? "checking";
-  const color =
-    mode === "live"
-      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-      : mode === "simulated"
-        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-        : "bg-neutral-500/15 text-neutral-400 border-neutral-500/30";
-
-  return (
-    <div
-      title={status?.detail ?? "checking..."}
-      className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${color}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${mode === "live" ? "bg-emerald-400" : mode === "simulated" ? "bg-amber-400" : "bg-neutral-400"}`} />
-      {label}: {mode}
-    </div>
-  );
-}
 
 export function StatusBar() {
   const [statuses, setStatuses] = useState<Record<string, StatusDTO | null>>({});
@@ -58,15 +40,24 @@ export function StatusBar() {
     };
   }, []);
 
+  const allChecking = rows.some((r) => (statuses[r.label]?.mode ?? "checking") === "checking");
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {rows.map((r) => (
-        <Pill key={r.label} label={r.label} status={statuses[r.label] ?? null} />
-      ))}
-      <div className="flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/15 px-3 py-1.5 text-xs font-medium text-sky-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-        Guild: custom (no real SDK found)
+    <div className="flex items-center gap-3 rounded-full border border-sand-dark bg-sand px-4 py-2.5">
+      <div className="flex items-center -space-x-1.5">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            title={statuses[r.label]?.detail ?? r.label}
+            className="relative h-7 w-7 overflow-hidden rounded-full border border-sand-dark ring-2 ring-sand"
+          >
+            <Image src={r.logo} alt={r.label} fill sizes="28px" className="object-cover" />
+          </div>
+        ))}
       </div>
+      <span className="text-xs font-medium text-ink-faint">
+        {allChecking ? "checking..." : "connected"}
+      </span>
     </div>
   );
 }

@@ -34,18 +34,33 @@ export interface StatusDTO {
 }
 
 export interface AgentTraceStepDTO {
-  agent: "Sourcer" | "Analyst" | "Outreach" | "Gatekeeper";
+  agent: "Eligibility" | "Skeptic" | "Investment Angle" | "Citation & Draft" | "Approval";
   input: unknown;
   output: unknown;
   note: string;
 }
 
-export interface GatekeeperEntryDTO {
+export interface ApprovalEntryDTO {
   key: string;
   startupId: string;
+  startupName: string;
+  pathNames: string[];
+  signalHeadline: string;
   approvalStatus: "pending" | "approved" | "rejected";
   message: string | null;
   motion?: { mode: "live" | "simulated"; detail: string };
+}
+
+export interface SkepticVerdictDTO {
+  verdict: "confirmed" | "rumor";
+  reasoning: string;
+  source: "guild" | "xai" | "simulated";
+}
+
+export interface VetoedCandidateDTO {
+  candidate: ResurfacedCandidateDTO;
+  skeptic: SkepticVerdictDTO;
+  vetoed: boolean;
 }
 
 export interface RawSignalDTO {
@@ -55,6 +70,12 @@ export interface RawSignalDTO {
   source: "Hacker News" | "GitHub";
   timestamp: number;
   matchedStartupId: string | null;
+}
+
+export interface AblationStateDTO {
+  ignoreTimePredicate: boolean;
+  forceTypeMismatch: boolean;
+  bypassSkeptic: boolean;
 }
 
 export interface KnowsEdgeDTO {

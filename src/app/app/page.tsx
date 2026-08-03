@@ -1,43 +1,43 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { StatusBar } from "@/components/StatusBar";
 import { SeedControls } from "@/components/SeedControls";
 import { Firehose } from "@/components/Firehose";
-import { PipelineRunner } from "@/components/PipelineRunner";
+import { Council } from "@/components/Council";
 import { KillShot } from "@/components/KillShot";
+import { Sidebar, type DashboardView } from "@/components/Sidebar";
 
 export default function Dashboard() {
+  const [view, setView] = useState<DashboardView>("council");
+
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
-      <header className="mb-8 space-y-4">
-        <div>
-          <Link
-            href="/"
-            className="text-xs text-neutral-500 transition hover:text-neutral-300"
-          >
+    <div className="flex min-h-screen w-full bg-cream">
+      <Sidebar active={view} onChange={setView} />
+
+      <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+        <header className="mb-8 flex items-center justify-between gap-4">
+          <Link href="/" className="text-xs text-ink-faint transition hover:text-ink">
             ← ember
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-50">
-            Ember
-          </h1>
-          <p className="mt-1 text-sm text-neutral-400">
-            The living deal-flow layer: a graph that remembers why a deal died, resurfaces it when a
-            new signal lands, and only acts through agents with a human approval gate.
-          </p>
-        </div>
-        <StatusBar />
-        <SeedControls />
-      </header>
+          <div className="flex items-center gap-3">
+            <SeedControls />
+            <StatusBar />
+          </div>
+        </header>
 
-      <main className="space-y-6">
-        <Firehose />
-        <PipelineRunner />
-        <KillShot />
-      </main>
+        <main>
+          {view === "council" && <Council />}
+          {view === "firehose" && <Firehose />}
+          {view === "killshot" && <KillShot />}
+        </main>
 
-      <footer className="mt-10 border-t border-neutral-900 pt-4 text-xs text-neutral-600">
-        See README.md for exactly which of the four mandatory integrations are live vs. honestly
-        simulated in this environment, and what flipping an env var upgrades.
-      </footer>
+        <footer className="mt-10 border-t border-sand-dark pt-4 text-xs text-ink-faint">
+          See README.md for exactly which of the four mandatory integrations are live vs. honestly
+          simulated in this environment, and what flipping an env var upgrades.
+        </footer>
+      </div>
     </div>
   );
 }

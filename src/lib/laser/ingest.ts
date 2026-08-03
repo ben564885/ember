@@ -1,6 +1,7 @@
 import { publishSignal, pollSignals, getLaserStatus } from "./client";
 import { fetchAllLiveSignals, matchToTrackedStartup, type RawSignal } from "./sources";
 import { insertSignalForStartup } from "@/lib/graph/queries";
+import { getAblationState } from "@/lib/ablation/state";
 
 const TOPIC = "live-firehose";
 
@@ -22,6 +23,11 @@ export interface IngestResult {
 export async function runIngestTick(): Promise<IngestResult> {
   const laser = await getLaserStatus();
   const raw = await fetchAllLiveSignals();
+  // The `reason` ablation toggle: while active, the typer below ignores
+  // its own real classification rule and stamps every signal with a
+  // deliberately wrong type instead — the upstream corruption point the
+  // ablation panel's "reason" switch attaches to.
+  const { forceTypeMismatch } = getAblationState();
 
   const enriched = raw.map((s) => ({ ...s, matchedStartupId: matchToTrackedStartup(s) }));
 
@@ -33,9 +39,10 @@ export async function runIngestTick(): Promise<IngestResult> {
   for (const s of enriched) {
     if (!s.matchedStartupId) continue;
     matched++;
+    const realType = s.source === "GitHub" ? "github_velocity" : "press";
     await insertSignalForStartup(s.matchedStartupId, {
       id: s.id,
-      type: s.source === "GitHub" ? "github_velocity" : "press",
+      type: forceTypeMismatch ? "hiring" : realType,
       headline: s.headline,
       url: s.url,
       source: s.source,

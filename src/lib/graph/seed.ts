@@ -117,6 +117,11 @@ const freshSignals: SeedSignal[] = [
   { startupId: "s-verdant", type: "funding", headline: "Verdant Systems raises $9M seed extension", source: "Crunchbase", daysAgoAt: 6, sentiment: "positive" },
   { startupId: "s-nordlight", type: "hiring", headline: "Nordlight hiring spree: 8 roles posted this week", source: "LinkedIn Jobs", daysAgoAt: 2, sentiment: "positive" },
   { startupId: "s-loamfield", type: "press", headline: "Loamfield mentioned in agtech roundup, mixed reception", source: "TechCrunch", daysAgoAt: 4, sentiment: "neutral" },
+  // Deliberately rumor-flavored: same startup as the "launch" signal above,
+  // reachable via the same Priya warm path, but this one is the Skeptic
+  // agent's demo veto target — a real second candidate row Investment Angle
+  // never gets to see unless the `skeptik` ablation toggle bypasses it.
+  { startupId: "s-kelpwork", type: "press", headline: "Kelpwork rumored to be in acquisition talks, unconfirmed by either party", source: "TechCrunch", daysAgoAt: 2, sentiment: "neutral" },
 ];
 
 export async function seed() {

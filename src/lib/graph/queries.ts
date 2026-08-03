@@ -25,8 +25,18 @@ export interface ResurfacedCandidate {
  * founder. One Cypher statement. The relational equivalent is a self-join
  * on an edge table plus a recursive CTE for the path — this is what "the
  * graph earns its keep" looks like as a single query instead of a slide.
+ *
+ * `ignoreTimePredicate` is the `time` ablation toggle: it drops the
+ * `WHERE sig.timestamp > passed.date` clause, so stale signals the fund
+ * already knew about when it passed leak back into the ranked list. Unlike
+ * the other three toggles, this one *increases* the candidate count when
+ * active — proof runs the opposite direction, which is deliberate.
  */
-export async function getResurfacedCandidates(maxHops = 2): Promise<ResurfacedCandidate[]> {
+export async function getResurfacedCandidates(
+  maxHops = 2,
+  opts: { ignoreTimePredicate?: boolean } = {},
+): Promise<ResurfacedCandidate[]> {
+  const timeClause = opts.ignoreTimePredicate ? "" : "WHERE sig.timestamp > passed.date";
   const rows = await graphQuery<{
     s: { properties: Record<string, unknown> };
     sig: { properties: Record<string, unknown> };
@@ -36,7 +46,7 @@ export async function getResurfacedCandidates(maxHops = 2): Promise<ResurfacedCa
     pathNames: string[];
   }>(
     `MATCH (me:Me {id: $meId})-[passed:PASSED_ON]->(s:Startup)-[:HAD_SIGNAL]->(sig:Signal)
-     WHERE sig.timestamp > passed.date
+     ${timeClause}
      MATCH (s)<-[:FOUNDED]-(f:Founder)
      MATCH path = (me)-[:KNOWS*1..${maxHops}]-(f)
      WITH s, sig, f, passed, path,

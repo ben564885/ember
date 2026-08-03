@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { approve } from "@/lib/guild/gatekeeper";
+import { approve } from "@/lib/guild/approval";
 
 export async function POST(req: Request) {
   const { key } = (await req.json()) as { key: string };

@@ -26,11 +26,11 @@ export function SeedControls() {
       <button
         onClick={reseed}
         disabled={loading}
-        className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-800 disabled:opacity-50"
+        className="rounded-full border border-sand-dark bg-sand px-4 py-2.5 text-xs font-medium text-ink-faint hover:bg-sand-dark disabled:opacity-50"
       >
         {loading ? "Seeding…" : "Reset & seed graph"}
       </button>
-      {result && <span className="text-xs text-neutral-500">{result}</span>}
+      {result && <span className="text-xs text-ink-faint">{result}</span>}
     </div>
   );
 }

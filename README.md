@@ -41,23 +41,32 @@ Two other real constraints discovered and fixed along the way:
 
 **Self-hosting instead of Cloud:** the bundled engine (`ghcr.io/rocketride-org/rocketride-engine`) crash-loops on boot with an upstream `onnxruntime-gpu==1.20.1 unsatisfiable` dependency bug, reproduced across `:latest`, `:3.3.0`, `:3.3.1` — not fixable from this app's side, untested on native linux/amd64 (this is Apple Silicon under emulation).
 
-### Guild — custom implementation, kept deliberately (real product confirmed, not integrated)
-The npm package literally named `guild-ai` is an unrelated 355-byte placeholder ("A multi-agent framework for Claude Code") — nothing to do with this hackathon's sponsor product. That's genuinely misleading, though: **Guild.ai is a real hosted product** — "the control plane for AI agents" at [guild.ai](https://www.guild.ai), with a real CLI (`@guildai/cli`), a real SDK (`@guildai/agents-sdk`), workspaces, and a documented human-in-the-loop primitive (`task.ui.prompt()`, which blocks an agent until a person replies — directly analogous to Gatekeeper here) and agent-to-agent handoff (`task.gather()`). Docs: [docs.guild.ai](https://docs.guild.ai/).
+### Guild — real platform triggers for all five agents, honest fallback for each
+The npm package literally named `guild-ai` is an unrelated 355-byte placeholder ("A multi-agent framework for Claude Code") — nothing to do with this hackathon's sponsor product. **Guild.ai is a real hosted product** — "the control plane for AI agents" at [guild.ai](https://www.guild.ai), with a real CLI (`@guildai/cli`, confirmed on npm), a real SDK (`@guildai/agents-sdk`), workspaces, Triggers (invoke a deployed agent over HTTP with a Trigger API key), and a documented human-in-the-loop primitive (`ask()`/`ui_prompt`, which blocks an agent until a person replies).
 
-Deliberately not migrated to it for this build: doing so would mean the four specialist agents run as separately published, network-hosted Guild agents invoked over their CLI/API rather than in-process TypeScript — a real architecture change, and a new live dependency during a timed demo, this close to presenting. Guild here stays a custom in-process implementation (`src/lib/guild/`) built to the same spec the mandatory-stack requirement describes: specialist agents, enforced handoffs, human-in-the-loop. See "The four agents" below. Worth migrating as a genuine fast-follow, not a demo-day gamble.
+Five agents — **Eligibility → Skeptic → Investment Angle → Citation & Draft → Approval** — and every one of them is a real deployed Guild.ai agent in `guild-agents/`, live in the `bnisevich/bnisevich-mmm` workspace. All five are invoked at the *same* Trigger URL (`callGuildAgent()` in `src/lib/guild-platform/client.ts` — the URL isn't agent-specific, only the API key is: each agent has its own Guild Trigger and its own Trigger API key, confirmed against the real `POST /triggers/{id}/api-keys` endpoint rather than guessed). `GUILD_SETUP.md` has the exact commands to redeploy any of them (`guild auth login` is the one interactive step no coding agent can do headlessly). What each one actually does once deployed:
+
+- **Eligibility** — narrates *why* the candidates FalkorDB already returned are eligible, for the trace only. Can't override the query: eligibility is enforced by a type-checked Cypher statement, not a prompt, deliberately.
+- **Skeptic** — independently verifies a candidate and can **veto** it before Investment Angle ever runs. That's real disagreement in the trace, not another pass-through. Tries, in order: **`guild`** (deployed agent) → **`xai`** (direct xAI Live Search call, `src/lib/guild-platform/xai.ts`, set `XAI_API_KEY`) → **`simulated`** (deterministic local heuristic — checks the headline for rumor-flavored language; the seeded Kelpwork "rumored... unconfirmed" signal is built to trip this exact check).
+- **Investment Angle** — decides the re-engagement angle, drafts a first-pass note, rates confidence. Tries **`guild`** first, then RocketRide's own live/simulated tiers.
+- **Citation & Draft** — the "no citation, no draft" firewall stays 100% local and deterministic; a draft only reaches Guild for a redraft attempt *after* it fails the local citation check once, and that redraft is re-verified by the same check before being trusted — never blindly.
+- **Approval** — keeps its own genuine human-in-the-loop gate in-process (`src/lib/guild/approval.ts`) — nothing sends without an explicit click, already true before any of this. `guild-agents/approval-agent/agent.ts` is a real Guild agent version of the same gate via `ask()`/`ui_prompt`, deliberately **not** wired into the live pipeline (it would block "Run pipeline" on a second, separate human response inside Guild's own chat UI) — an optional standalone deployment target in `GUILD_SETUP.md`, not required for the app's live behavior.
 
 ## Architecture
 
 ```
-LaserData (real fetch, sim transport, continuous) → FalkorDB (real graph) → RocketRide (live connection, live content) → Guild (custom) → External Tools/APIs (Slack) → UI
+LaserData (real fetch, sim transport, continuous) → FalkorDB (real graph) → RocketRide (live connection, live content) → Guild agent council (5 agents, each: real trigger / stage-specific fallback tiers) → External Tools/APIs (Slack) → UI
 ```
 
-- `src/lib/graph/` — FalkorDB client, schema, seed data, and the flagship Cypher query
-- `src/lib/laser/` — live signal sources (HN, GitHub), the Laser client with honest fallback
+- `src/lib/graph/` — FalkorDB client, schema, seed data, and the flagship Cypher query (with the `time`-ablation-aware predicate toggle)
+- `src/lib/laser/` — live signal sources (HN, GitHub), the Laser client with honest fallback, and the `reason`-ablation-aware typer
 - `src/lib/rocketride/` — the real `.pipe` config, client, and local decision fallback
-- `src/lib/guild/` — the four agents and the orchestrator
+- `src/lib/guild/` — the five agents (Eligibility, Skeptic, Investment Angle, Citation & Draft, Approval) and the orchestrator
+- `src/lib/guild-platform/` — the real Guild.ai Trigger client and the direct xAI Live Search client Skeptic calls into
+- `src/lib/ablation/` — the in-memory state backing the `time` / `reason` / `skeptik` ablation toggles
+- `guild-agents/` — real Guild.ai coded agents, deployed separately via the Guild CLI (see `GUILD_SETUP.md`) — not part of this Next.js app's build
 - `src/app/api/` — one route per integration boundary
-- `src/components/` — the dashboard (status bar, firehose, pipeline runner, kill-shot panel)
+- `src/components/` — the dashboard (status bar, firehose, pipeline runner, ablation panel, kill-shot panel)
 
 ## The flagship query
 
@@ -72,18 +81,24 @@ ORDER BY sig.timestamp DESC, hops ASC
 
 Startups passed on, where a signal landed after the pass, where a ≤2-hop warm path exists to a current founder. One Cypher statement; the relational equivalent needs a self-join on an edge table plus a recursive CTE for the path.
 
-## The four agents
+## The five agents
 
 | Agent | Boundary |
 |---|---|
-| **Sourcer** | Only agent with FalkorDB access. Returns typed candidates — no prose field exists on its output type. |
-| **Analyst** | Takes exactly Sourcer's output, asks RocketRide to decide. No direct graph or signal-feed access. |
-| **Outreach** | The citation firewall: verifies every draft cites the founder name, the signal, and the pass reason. Anything missing a citation is discarded and rebuilt deterministically from the same fields — never rendered as-is. |
-| **Gatekeeper** | Human approval queue. Reject sends nothing. Approve does: posts the drafted note to Slack via `SLACK_WEBHOOK_URL` (`src/lib/slack/notify.ts`) — the one place in the app with a genuine external side effect, gated behind the human click. Unset, it degrades honestly to "not sent" rather than pretending. |
+| **Eligibility** | Only agent with FalkorDB access. Returns typed candidates — no prose field exists on its output type. |
+| **Skeptic** | Independently verifies each candidate (Guild trigger → xAI Live Search → local heuristic) and can **veto** it. Holds the xAI credential no other agent imports. The only agent that can override Eligibility's output instead of relaying it — real disagreement, not another pass-through. |
+| **Investment Angle** | Takes exactly what survived Skeptic, asks RocketRide to decide. No direct graph, signal-feed, or xAI access — "packet only, no tools." |
+| **Citation & Draft** | Two gates: a type-plausibility check (does the signal's `type` actually match its headline?) and the citation firewall (founder name, signal, pass reason must all appear verbatim). Either failure discards the draft — a type mismatch produces a real `declined` output, a missing citation gets rebuilt deterministically from the same fields. Never rendered unverified. |
+| **Approval** | Human approval queue. Reject sends nothing. Approve does: posts the drafted note to Slack via `SLACK_WEBHOOK_URL` (`src/lib/slack/notify.ts`) — the one place in the app with a genuine external side effect, gated behind the human click. Unset, it degrades honestly to "not sent" rather than pretending. |
 
-## The kill shot
+## The kill shots
 
-Sever any `KNOWS` edge in the dashboard's kill-shot panel, then re-run the pipeline. Any candidate whose only path ran through that edge disappears from the ranked list — not because a score changed, but because the path no longer exists in FalkorDB. Restore the edge, it's back. This is the single move that proves the graph is load-bearing rather than decorative.
+Four ablation switches, each proving a different layer is load-bearing rather than decorative:
+
+- **`edge`** (kill-shot panel) — sever any `KNOWS` edge, then re-run the pipeline. Any candidate whose only path ran through that edge disappears — not because a score changed, but because the path no longer exists in FalkorDB. Restore it, it's back.
+- **`time`** (ablation panel) — drops the flagship query's `sig.timestamp > passed.date` predicate. Proof runs the opposite direction from the others: the candidate count should *increase*, since stale signals leak back in.
+- **`reason`** (ablation panel) — forces every newly-ingested live signal to carry a deliberately wrong type. Pull live signals with it on, re-run: Citation & Draft's type-plausibility check should decline the mismatched one.
+- **`skeptik`** (ablation panel) — bypasses Skeptic's veto. With it on, the seeded rumor-flavored Kelpwork signal reaches Approval unchecked instead of being blocked. This is the one that proves the Guild agent council specifically is load-bearing.
 
 ## Environment variables
 
@@ -94,7 +109,12 @@ Sever any `KNOWS` edge in the dashboard's kill-shot panel, then re-run the pipel
 | `ROCKETRIDE_URI` | Points RocketRide at a working self-hosted engine (default: `ws://localhost:5565`) |
 | `ROCKETRIDE_APIKEY` | Connects RocketRide to Cloud instead of self-hosted — this genuinely works, including reading real answers back |
 | `OPENAI_API_KEY` | Injected into `pipeline.json`'s `llm_openai` node at call time, never written to that file — needed for RocketRide's completion to run at all |
-| `SLACK_WEBHOOK_URL` | A Slack Incoming Webhook URL — makes Gatekeeper's approve() actually post the drafted note to a real Slack channel |
+| `SLACK_WEBHOOK_URL` | A Slack Incoming Webhook URL — makes Approval's approve() actually post the drafted note to a real Slack channel |
+| `XAI_API_KEY` | Makes Skeptic call xAI's Live Search API for real instead of the local heuristic |
+| `GUILD_WORKSPACE_OWNER` / `GUILD_WORKSPACE_NAME` | The one shared invocation URL every agent in the workspace uses — it is not agent-specific, only the API key is |
+| `GUILD_ELIGIBILITY_API_KEY_ID` / `_SECRET`, `GUILD_SKEPTIC_API_KEY_ID` / `_SECRET`, `GUILD_INVESTMENT_ANGLE_API_KEY_ID` / `_SECRET`, `GUILD_CITATION_DRAFT_API_KEY_ID` / `_SECRET`, `GUILD_APPROVAL_API_KEY_ID` / `_SECRET` | Per-agent Trigger API key, from `guild api POST /triggers/{triggerId}/api-keys` — set only the ones you've deployed; see `GUILD_SETUP.md` |
+| `GUILD_API_KEY_ID` / `GUILD_API_KEY_SECRET` | Legacy alias for `GUILD_SKEPTIC_API_KEY_ID`/`_SECRET` specifically, kept so an already-issued Skeptic key needs no changes |
+| `GUILD_TRIGGER_URL` | Override for the shared session URL itself, if `app.guild.ai`'s shape ever changes |
 | `FALKORDB_HOST` / `FALKORDB_PORT` | Override FalkorDB connection (defaults: `127.0.0.1:6379`) |
 
 None of these are required to run the demo — every integration degrades honestly and the dashboard shows exactly which mode each one is in and why.

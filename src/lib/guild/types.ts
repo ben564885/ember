@@ -24,16 +24,34 @@ export interface SkepticOutput {
 export interface DecisionOutput {
   candidate: ResurfacedCandidate;
   skeptic: SkepticVerdict;
-  decision: PipelineRunResult;
+  /** `source` widens PipelineRunResult's own "live"|"simulated" with "guild" — the tier Investment Angle tries before ever reaching RocketRide. */
+  decision: Omit<PipelineRunResult, "source"> & { source: PipelineRunResult["source"] | "guild" };
+}
+
+interface DraftOutputCommon {
+  key: string;
+  startupId: string;
+  startupName: string;
+  pathNames: string[];
+  signalHeadline: string;
 }
 
 export type DraftOutput =
-  | { status: "drafted"; key: string; startupId: string; message: string; citedFields: string[] }
-  | { status: "declined"; key: string; startupId: string; reason: string };
+  | (DraftOutputCommon & {
+      status: "drafted";
+      message: string;
+      citedFields: string[];
+      /** Where `message` actually came from: Investment Angle's own draft as-is, a Guild redraft after the citation check failed once, or this stage's own deterministic rebuild. */
+      source: "provided" | "guild" | "rebuilt";
+    })
+  | (DraftOutputCommon & { status: "declined"; reason: string });
 
 export interface ApprovalEntry {
   key: string;
   startupId: string;
+  startupName: string;
+  pathNames: string[];
+  signalHeadline: string;
   approvalStatus: "pending" | "approved" | "rejected";
   message: string | null;
   motion?: { mode: "live" | "simulated"; detail: string };

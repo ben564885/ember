@@ -3,13 +3,32 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Warm dashboard palette (the /app dashboard only — the video landing
+     page at / is full-bleed and unaffected by these). Named so components
+     read as bg-cream / text-ink / bg-terracotta rather than arbitrary hex
+     utilities scattered everywhere. */
+  --color-cream: #faf5ec;
+  --color-cream-card: #fffcf8;
+  --color-sand: #f0e6d8;
+  --color-sand-dark: #e4d5c1;
+  --color-terracotta: #9c7159;
+  --color-terracotta-dark: #7c5843;
+  --color-terracotta-light: #b98a6f;
+  --color-ink: #3a2e27;
+  --color-ink-soft: #6b5b4e;
+  --color-ink-faint: #9c8c7d;
+  --color-sage: #5f8567;
+  --color-sage-light: #e3ece3;
+  --color-gold: #b5883c;
+  --color-gold-light: #f5ead4;
 }
 
 /* Background/text color are set via Tailwind utility classes directly on
-   <body> in layout.tsx (this app is dark-only). Deliberately not setting
-   them here: a plain, unlayered `body { background }` rule beats
-   @layer-scoped Tailwind utilities in the cascade regardless of
-   specificity, which silently overrode bg-neutral-950 before this fix. */
+   <body> in layout.tsx. Deliberately not setting them here: a plain,
+   unlayered `body { background }` rule beats @layer-scoped Tailwind
+   utilities in the cascade regardless of specificity, which silently
+   overrode the intended background before this fix. */
 body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
