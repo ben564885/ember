@@ -1,0 +1,60 @@
+name: ember
+
+services:
+  # FalkorDB — persistent graph memory (Cypher). Browser UI at :3001.
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "6379:6379"
+      - "3001:3000"
+    volumes:
+      - falkordb-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Apache Iggy — the streaming backend LaserData's SDK connects to.
+  iggy:
+    # Pinned close to the wire version @laserdata/laser-sdk expects
+    # (apache-iggy@0.8.1-edge.3 in its lockfile). :latest hangs the TS
+    # client mid-handshake — a version-marker mismatch, not a network issue.
+    image: apache/iggy:edge
+    security_opt:
+      - seccomp:unconfined # io_uring syscalls blocked by Docker Desktop's default profile
+    ports:
+      - "8090:8090" # TCP wire protocol (what @laserdata/laser-sdk speaks)
+      - "3002:3000" # HTTP API
+    environment:
+      IGGY_ROOT_USERNAME: iggy
+      IGGY_ROOT_PASSWORD: iggy
+    volumes:
+      - iggy-data:/local_data
+
+  # RocketRide engine — self-hosted, no API key needed for local use.
+  #
+  # KNOWN BROKEN as of this writing: the published image (tried :latest,
+  # :3.3.0, :3.3.1) crash-loops on boot with
+  #   "No solution found when resolving dependencies:
+  #    onnxruntime-gpu==1.20.1 unsatisfiable"
+  # — an upstream constraints bug in ai/eaas.py's dependency resolver, not
+  # anything in this compose file. Reproduces under amd64 emulation on
+  # Apple Silicon; untested on native linux/amd64. restart is disabled so
+  # it doesn't spam logs. The app's RocketRide adapter (src/lib/rocketride)
+  # targets this engine at ws://localhost:5565 by the same real client
+  # code that talks to RocketRide Cloud — point ROCKETRIDE_URI at a working
+  # host, or set ROCKETRIDE_APIKEY for Cloud, and no app code changes.
+  rocketride:
+    image: ghcr.io/rocketride-org/rocketride-engine:3.3.1
+    platform: linux/amd64 # amd64-only image; emulated on Apple Silicon
+    ports:
+      - "5565:5565"
+    volumes:
+      - rocketride-data:/data
+    restart: "no"
+
+volumes:
+  falkordb-data:
+  iggy-data:
+  rocketride-data:

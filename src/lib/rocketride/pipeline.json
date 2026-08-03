@@ -1,0 +1,44 @@
+{
+  "project_id": "b53f41ba-881a-46fb-802b-8ab5a8e23d89",
+  "version": 1,
+  "components": [
+    {
+      "id": "webhook_2",
+      "provider": "webhook",
+      "name": "Webhook",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "webhook",
+        "name": "Webhook"
+      }
+    },
+    {
+      "id": "llm_openai_1",
+      "provider": "llm_openai",
+      "name": "OpenAI",
+      "config": {
+        "profile": "openai-5-2",
+        "openai-5-2": {
+          "apikey": "__OPENAI_API_KEY__"
+        },
+        "name": "OpenAI"
+      },
+      "input": [
+        { "lane": "questions", "from": "webhook_2" }
+      ]
+    },
+    {
+      "id": "response_answers_3",
+      "provider": "response_answers",
+      "name": "Response",
+      "config": {
+        "name": "Response"
+      },
+      "input": [
+        { "lane": "answers", "from": "llm_openai_1" }
+      ]
+    }
+  ]
+}

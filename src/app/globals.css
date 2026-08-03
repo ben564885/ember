@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Background/text color are set via Tailwind utility classes directly on
+   <body> in layout.tsx (this app is dark-only). Deliberately not setting
+   them here: a plain, unlayered `body { background }` rule beats
+   @layer-scoped Tailwind utilities in the cascade regardless of
+   specificity, which silently overrode bg-neutral-950 before this fix. */
+body {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
