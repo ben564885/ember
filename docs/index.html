@@ -227,6 +227,13 @@
     font-size:13px; color:var(--ink-faint); margin-top:26px; max-width:640px;
   }
 
+  /* real-usage screenshot */
+  .phone-shot{
+    max-height:60vh; width:auto; margin:28px auto 0; display:block;
+    border-radius:28px; border:1.5px solid var(--sand-dark);
+    box-shadow:0 12px 32px rgba(58,46,39,.18);
+  }
+
   .repo{ font-size:14px; color:var(--ink-soft); margin-top:12px; }
   .repo b{ color:var(--ink); }
 
@@ -276,7 +283,7 @@
 <body>
 
 <div class="hint" id="hint"><kbd>space</kbd> or <kbd>&#8594;</kbd> to advance</div>
-<div class="counter" id="counter">1 / 10</div>
+<div class="counter" id="counter">1 / 11</div>
 
 <div class="deck" id="deck">
 
@@ -304,8 +311,16 @@
     </div>
   </section>
 
-  <!-- 4. The mandatory stack -->
+  <!-- 4. It's real -->
   <section class="slide" data-index="3">
+    <div class="eyebrow">Not a mockup</div>
+    <h2 class="center">A pass, reheated — over text</h2>
+    <img class="phone-shot" src="assets/reheat-thread.png" alt="iMessage thread with the ember agent surfacing a passed-on deal and sending a re-warming email after the user replies Yes">
+    <p class="footnote center maxw" style="margin:14px auto 0;">Ember flags the pass, asks before acting, then drafts and sends — the exact loop the rest of this deck explains.</p>
+  </section>
+
+  <!-- 5. The mandatory stack -->
+  <section class="slide" data-index="4">
     <div class="eyebrow">The mandatory stack</div>
     <h2 class="center">Four sponsors, one loop</h2>
     <div class="stack-row">
@@ -333,8 +348,8 @@
     </div>
   </section>
 
-  <!-- 5. Guild council -->
-  <section class="slide" data-index="4">
+  <!-- 6. Guild council -->
+  <section class="slide" data-index="5">
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Guild.ai is the brain</div></div>
     <h2 class="center">Five agents, real boundaries</h2>
     <div class="pipeline">
@@ -351,8 +366,8 @@
     <p class="footnote center maxw" style="margin:6px auto 0;">Press space to step the council through, one agent at a time — boundaries enforced by type signatures, not prompt instructions.</p>
   </section>
 
-  <!-- 6. Why it's real Guild usage -->
-  <section class="slide" data-index="5">
+  <!-- 7. Why it's real Guild usage -->
+  <section class="slide" data-index="6">
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Not a wrapper</div></div>
     <h2 class="center">Real triggers. Real disagreement.</h2>
     <div class="cols">
@@ -375,8 +390,8 @@
     </div>
   </section>
 
-  <!-- 7. Guild's honest fallback ladder -->
-  <section class="slide" data-index="6">
+  <!-- 8. Guild's honest fallback ladder -->
+  <section class="slide" data-index="7">
     <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Skeptic, tier by tier</div></div>
     <h2 class="center">Never fakes success</h2>
     <div class="tier-list">
@@ -398,8 +413,8 @@
     <p class="footnote center" style="margin-top:16px;">Space steps through the tiers in the order Skeptic actually tries them.</p>
   </section>
 
-  <!-- 8. Kill shot -->
-  <section class="slide" data-index="7">
+  <!-- 9. Kill shot -->
+  <section class="slide" data-index="8">
     <div class="eyebrow">The proof</div>
     <h2 class="center">The <code>skeptik</code> kill shot</h2>
     <p class="lede center">Press space to flip the switch and re-run the same rumor-flavored signal. This is the proof that the council is load-bearing, not decorative.</p>
@@ -417,8 +432,8 @@
     </div>
   </section>
 
-  <!-- 9. Architecture -->
-  <section class="slide" data-index="8">
+  <!-- 10. Architecture -->
+  <section class="slide" data-index="9">
     <div class="eyebrow">Full stack</div>
     <h2 class="center">Where Guild sits in the loop</h2>
     <div class="flow">
@@ -435,8 +450,8 @@
     <p class="footnote center maxw" style="margin:0 auto;">Every other layer moves memory forward. Guild is the only layer with independent judgment sitting in that path — it can stop a candidate cold.</p>
   </section>
 
-  <!-- 10. Close -->
-  <section class="slide" data-index="9">
+  <!-- 11. Close -->
+  <section class="slide" data-index="10">
     <div class="eyebrow">Ember</div>
     <h2 class="center">A council that can say no.</h2>
     <p class="lede center">Five deployed agents. A real veto. A kill switch that proves it. For a VC, that's the difference between a resurfaced deal you can trust and just another alert to ignore.</p>
