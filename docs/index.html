@@ -74,19 +74,47 @@
   .center{ text-align:center; }
   .maxw{ max-width:880px; margin:0 auto; }
 
-  .accent-bar{
-    width:52px; height:5px; border-radius:3px;
-    background:var(--terracotta); margin:0 auto 26px;
+  .eyebrow-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:18px; }
+  .eyebrow-row .eyebrow{ margin-bottom:0; }
+  .brand-logo{ width:22px; height:22px; border-radius:6px; object-fit:cover; display:block; }
+
+  /* sponsor stack */
+  .stack-row{
+    display:flex; gap:22px; justify-content:center; flex-wrap:wrap; margin:32px 0 8px;
+  }
+  .stack-item{
+    display:flex; flex-direction:column; align-items:center; gap:10px; width:200px;
+    padding:20px 16px; border-radius:18px; border:1.5px solid transparent;
+  }
+  .stack-item.highlight{ border-color:var(--terracotta); background:var(--gold-light); }
+  .stack-item .logo{
+    width:64px; height:64px; border-radius:18px; overflow:hidden;
+    border:1.5px solid var(--sand-dark);
+  }
+  .stack-item .logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .stack-item .name{ font-family:var(--font-serif); font-size:19px; color:var(--ink); }
+  .stack-item .desc{ font-size:12.5px; color:var(--ink-faint); text-align:center; line-height:1.4; }
+  .stack-item .tag{
+    font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--terracotta-dark);
   }
 
-  /* pill chip */
-  .pill{
-    display:inline-flex; align-items:center; gap:8px;
-    background:var(--cream-card); border:1px solid var(--sand-dark);
-    border-radius:999px; padding:8px 16px;
-    font-size:13px; font-weight:600; color:var(--ink-soft);
+  /* tier ladder */
+  .tier-list{ display:flex; flex-direction:column; gap:8px; max-width:560px; margin:30px auto 0; }
+  .tier{
+    display:flex; align-items:center; gap:16px; text-align:left;
+    background:var(--cream-card); border:1.5px solid var(--sand-dark);
+    border-radius:14px; padding:14px 18px;
   }
-  .dot{ width:7px; height:7px; border-radius:50%; background:var(--sage); }
+  .tier.primary{ border-color:var(--terracotta); background:var(--gold-light); }
+  .tier .n{
+    font-family:var(--font-serif); font-style:italic; font-size:22px; color:var(--ink-faint);
+    width:22px; flex-shrink:0; text-align:center;
+  }
+  .tier.primary .n{ color:var(--terracotta-dark); }
+  .tier .t-name{ font-size:14.5px; font-weight:700; color:var(--ink); }
+  .tier .t-desc{ font-size:12.5px; color:var(--ink-faint); margin-top:2px; line-height:1.4; }
+  .tier-sep{ text-align:center; color:var(--ink-faint); font-size:14px; margin:-2px 0; }
 
   /* pipeline */
   .pipeline{
@@ -157,34 +185,21 @@
     margin: 30px 0 26px; max-width:960px;
   }
   .node{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
     background:var(--cream-card); border:1.5px solid var(--sand-dark);
-    border-radius:14px; padding:12px 16px; font-family:var(--font-serif); font-size:18px; font-weight:400; color:var(--ink);
+    border-radius:14px; padding:12px 16px 14px; font-family:var(--font-serif); font-size:18px; font-weight:400; color:var(--ink);
     text-align:center;
   }
   .node.guild{ border-color:var(--terracotta); background:var(--gold-light); color:var(--terracotta-dark); }
-  .node small{ display:block; font-weight:500; color:var(--ink-faint); font-size:11px; margin-top:3px; }
+  .node .logo{ width:30px; height:30px; border-radius:8px; overflow:hidden; }
+  .node .logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .node small{ display:block; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; font-weight:500; color:var(--ink-faint); font-size:11px; }
   .flow .sep{ color:var(--ink-faint); font-size:16px; }
 
   .footnote{
     font-size:13px; color:var(--ink-faint); margin-top:26px; max-width:640px;
   }
 
-  /* title slide */
-  .brand-mark{
-    width:64px; height:64px; border-radius:20px; background:var(--terracotta);
-    display:flex; align-items:center; justify-content:center; margin-bottom:26px;
-    box-shadow: 0 6px 20px rgba(124,88,67,.25);
-  }
-  .brand-mark span{ color:var(--cream-card); font-family:var(--font-serif); font-size:34px; font-style:italic; font-weight:400; }
-
-  .prize-row{ display:flex; gap:12px; margin-top:30px; flex-wrap:wrap; justify-content:center; }
-
-  .cta{
-    display:inline-block; margin-top:34px;
-    background:var(--ink); color:var(--cream-card);
-    padding:14px 30px; border-radius:999px;
-    font-size:14px; font-weight:700; letter-spacing:.02em;
-  }
   .repo{ font-size:14px; color:var(--ink-soft); margin-top:12px; }
   .repo b{ color:var(--ink); }
 
@@ -228,26 +243,21 @@
       --ink:#f3ece2; --ink-soft:#cabaa9; --ink-faint:#8c7c6c;
       --sage:#8fb097; --sage-light:#2c352e; --gold:#d8b57a; --gold-light:#332a1c;
     }
-    .cta{ background:var(--terracotta); color:#211a15; }
   }
 </style>
 </head>
 <body>
 
 <div class="hint" id="hint"><kbd>space</kbd> or <kbd>&#8594;</kbd> to advance</div>
-<div class="counter" id="counter">1 / 8</div>
+<div class="counter" id="counter">1 / 10</div>
 
 <div class="deck" id="deck">
 
   <!-- 1. Title -->
   <section class="slide active" data-index="0">
-    <div class="brand-mark"><span>E</span></div>
     <div class="eyebrow">Memory Meets Motion</div>
     <h1>Ember</h1>
     <p class="lede">The living deal-flow layer — memory that resurfaces dead deals, and a Guild.ai agent council that decides whether they're worth waking up.</p>
-    <div class="prize-row">
-      <div class="pill"><span class="dot"></span>Submitted for Best Use of Guild.ai</div>
-    </div>
   </section>
 
   <!-- 2. The problem -->
@@ -267,9 +277,38 @@
     </div>
   </section>
 
-  <!-- 4. Guild council -->
+  <!-- 4. The mandatory stack -->
   <section class="slide" data-index="3">
-    <div class="eyebrow">Guild.ai is the brain</div>
+    <div class="eyebrow">The mandatory stack</div>
+    <h2 class="center">Four sponsors, one loop</h2>
+    <div class="stack-row">
+      <div class="stack-item">
+        <div class="logo"><img src="assets/laserdata.jpeg" alt="LaserData"></div>
+        <div class="name">LaserData</div>
+        <div class="desc">Live signal ingestion — real HN &amp; GitHub calls, streamed onto the graph continuously.</div>
+      </div>
+      <div class="stack-item">
+        <div class="logo"><img src="assets/falkor.svg" alt="FalkorDB"></div>
+        <div class="name">FalkorDB</div>
+        <div class="desc">Persistent graph memory — the whole deal-flow history, queried in Cypher.</div>
+      </div>
+      <div class="stack-item">
+        <div class="logo"><img src="assets/rocketride.jpeg" alt="RocketRide"></div>
+        <div class="name">RocketRide</div>
+        <div class="desc">Orchestration engine — reads what memory surfaced and runs the completion.</div>
+      </div>
+      <div class="stack-item highlight">
+        <div class="logo"><img src="assets/guild.jpeg" alt="Guild.ai"></div>
+        <div class="name">Guild.ai</div>
+        <div class="desc">Multi-agent coordination — the council that decides whether to act.</div>
+        <div class="tag">Deep dive next &#8594;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Guild council -->
+  <section class="slide" data-index="4">
+    <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Guild.ai is the brain</div></div>
     <h2 class="center">Five agents, real boundaries</h2>
     <div class="pipeline">
       <div class="agent"><div class="badge">E</div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div></div>
@@ -285,9 +324,9 @@
     <p class="footnote center maxw" style="margin:6px auto 0;">Boundaries enforced by type signatures, not prompt instructions — each agent's output type makes the wrong move unrepresentable.</p>
   </section>
 
-  <!-- 5. Why it's real Guild usage -->
-  <section class="slide" data-index="4">
-    <div class="eyebrow">Not a wrapper</div>
+  <!-- 6. Why it's real Guild usage -->
+  <section class="slide" data-index="5">
+    <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Not a wrapper</div></div>
     <h2 class="center">Real triggers. Real disagreement.</h2>
     <div class="cols">
       <div class="col">
@@ -309,8 +348,30 @@
     </div>
   </section>
 
-  <!-- 6. Kill shot -->
-  <section class="slide" data-index="5">
+  <!-- 7. Guild's honest fallback ladder -->
+  <section class="slide" data-index="6">
+    <div class="eyebrow-row"><img class="brand-logo" src="assets/guild.jpeg" alt="Guild.ai"><div class="eyebrow">Skeptic, tier by tier</div></div>
+    <h2 class="center">Never fakes success</h2>
+    <div class="tier-list">
+      <div class="tier primary">
+        <div class="n">1</div>
+        <div><div class="t-name">Guild Trigger</div><div class="t-desc">The deployed skeptic-agent — a real Guild.ai session, invoked over its own Trigger key.</div></div>
+      </div>
+      <div class="tier-sep">&#8595;<span style="font-size:11px; margin-left:6px;">if the call fails</span></div>
+      <div class="tier">
+        <div class="n">2</div>
+        <div><div class="t-name">xAI Live Search</div><div class="t-desc">A direct xAI credential Skeptic alone holds — no other agent can reach it.</div></div>
+      </div>
+      <div class="tier-sep">&#8595;<span style="font-size:11px; margin-left:6px;">if that fails too</span></div>
+      <div class="tier">
+        <div class="n">3</div>
+        <div><div class="t-name">Local heuristic</div><div class="t-desc">A deterministic rumor-language check — degrades honestly instead of breaking the demo.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Kill shot -->
+  <section class="slide" data-index="7">
     <div class="eyebrow">The proof</div>
     <h2 class="center">The <code>skeptik</code> kill shot</h2>
     <p class="lede center">Bypass Skeptic's veto and re-run the same rumor-flavored signal. This is the switch that proves the council is load-bearing, not decorative.</p>
@@ -328,26 +389,26 @@
     </div>
   </section>
 
-  <!-- 7. Architecture -->
-  <section class="slide" data-index="6">
+  <!-- 9. Architecture -->
+  <section class="slide" data-index="8">
     <div class="eyebrow">Full stack</div>
     <h2 class="center">Where Guild sits in the loop</h2>
     <div class="flow">
-      <div class="node">LaserData<small>live signal</small></div>
+      <div class="node"><div class="logo"><img src="assets/laserdata.jpeg" alt="LaserData"></div>LaserData<small>live signal</small></div>
       <div class="sep">&#8594;</div>
-      <div class="node">FalkorDB<small>graph memory</small></div>
+      <div class="node"><div class="logo"><img src="assets/falkor.svg" alt="FalkorDB"></div>FalkorDB<small>graph memory</small></div>
       <div class="sep">&#8594;</div>
-      <div class="node">RocketRide<small>reads memory</small></div>
+      <div class="node"><div class="logo"><img src="assets/rocketride.jpeg" alt="RocketRide"></div>RocketRide<small>reads memory</small></div>
       <div class="sep">&#8594;</div>
-      <div class="node guild">Guild council<small>5 agents, can say no</small></div>
+      <div class="node guild"><div class="logo"><img src="assets/guild.jpeg" alt="Guild.ai"></div>Guild council<small>5 agents, can say no</small></div>
       <div class="sep">&#8594;</div>
       <div class="node">Slack + UI<small>human approval</small></div>
     </div>
     <p class="footnote center maxw" style="margin:0 auto;">Every other layer moves memory forward. Guild is the only layer with independent judgment sitting in that path — it can stop a candidate cold.</p>
   </section>
 
-  <!-- 8. Close -->
-  <section class="slide" data-index="7">
+  <!-- 10. Close -->
+  <section class="slide" data-index="9">
     <div class="eyebrow">Ember</div>
     <h2 class="center">Best Use of Guild.ai</h2>
     <p class="lede center">Five deployed agents. A real veto. A kill switch that proves it. Memory that only acts through a council that can disagree with itself.</p>
