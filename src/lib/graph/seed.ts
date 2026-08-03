@@ -94,25 +94,30 @@ const mets: Met[] = [
 // This is the exact edge set the "kill shot" demo prunes.
 const knows: Knows[] = [
   { a: ME_ID, b: "f-julia", strength: "strong", context: "worked together briefly at a prior company" },
-  { a: "f-julia", b: "f-hakim", strength: "strong", context: "co-founders" },
   { a: "f-hakim", b: "f-tomas", strength: "medium", context: "both ex-hyperscaler, same eng org alumni group" },
   { a: ME_ID, b: "f-priya", strength: "medium", context: "met at coffee" },
   { a: "f-priya", b: "f-maya", strength: "weak", context: "overlapped at Stripe for 8 months" },
   { a: ME_ID, b: "f-rowan", strength: "weak", context: "follows on X, one DM exchange" },
 ];
 
-// Backfilled signals — history the graph already knew before "today".
+// Backfilled signals — history the graph already knew before "today". Kept
+// to one non-qualifying-for-resurfacing entry per startup where possible
+// (Kelpwork's is the one exception, deliberately dated after its pass — see
+// its comment) so getResurfacedCandidates doesn't return the same startup
+// twice over two different signals; keeps the demo's final candidate list
+// to one row per company instead of piling up near-duplicates.
 const historicalSignals: SeedSignal[] = [
-  { startupId: "s-ferrylane", type: "hiring", headline: "Ferrylane posts 3 senior eng roles", source: "LinkedIn Jobs", daysAgoAt: 255, sentiment: "neutral" },
   { startupId: "s-kelpwork", type: "launch", headline: "Kelpwork ships public API beta", source: "Product Hunt", daysAgoAt: 180, sentiment: "positive" },
   { startupId: "s-nordlight", type: "press", headline: "Nordlight featured in climate-tech roundup", source: "TechCrunch", daysAgoAt: 120, sentiment: "positive" },
-  { startupId: "s-verdant", type: "github_velocity", headline: "Verdant's OSS SDK crosses 500 stars", source: "GitHub", daysAgoAt: 95, sentiment: "positive" },
   { startupId: "s-runwell", type: "hiring", headline: "Runwell hires former Oscar Health VP", source: "LinkedIn Jobs", daysAgoAt: 60, sentiment: "positive" },
 ];
 
 // The "hits" — signals fresh enough to be the reason a passed deal resurfaces
 // right now. These are what the flagship query is built to catch.
 const freshSignals: SeedSignal[] = [
+  // Dated today (daysAgoAt: 0) so this sorts first — most recent signal wins
+  // ties in getResurfacedCandidates' `ORDER BY sig.timestamp DESC`.
+  { startupId: "s-ossuary", type: "github_velocity", headline: "jolt-lang/jolt crosses 137 stars, pushed today", source: "GitHub", daysAgoAt: 0, sentiment: "positive" },
   { startupId: "s-ferrylane", type: "funding", headline: "Ferrylane closes $14M Series A led by a top-tier fund", source: "Crunchbase", daysAgoAt: 3, sentiment: "positive" },
   { startupId: "s-verdant", type: "funding", headline: "Verdant Systems raises $9M seed extension", source: "Crunchbase", daysAgoAt: 6, sentiment: "positive" },
   { startupId: "s-nordlight", type: "hiring", headline: "Nordlight hiring spree: 8 roles posted this week", source: "LinkedIn Jobs", daysAgoAt: 2, sentiment: "positive" },
