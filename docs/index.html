@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ember — Best Use of Guild.ai</title>
+<style>
+  :root{
+    --cream: #faf5ec;
+    --cream-card: #fffcf8;
+    --sand: #f0e6d8;
+    --sand-dark: #e4d5c1;
+    --terracotta: #9c7159;
+    --terracotta-dark: #7c5843;
+    --terracotta-light: #b98a6f;
+    --ink: #3a2e27;
+    --ink-soft: #6b5b4e;
+    --ink-faint: #9c8c7d;
+    --sage: #5f8567;
+    --sage-light: #e3ece3;
+    --gold: #b5883c;
+    --gold-light: #f5ead4;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    overflow:hidden; overscroll-behavior:none;
+    background:var(--cream); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  body{ touch-action:none; }
+
+  .deck{
+    position:relative;
+    height:100vh; height:100dvh; width:100vw;
+  }
+
+  .slide{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding: 6vh 8vw;
+    opacity:0; transform:translateY(14px);
+    pointer-events:none;
+    transition: opacity .5s ease, transform .5s ease;
+  }
+  .slide.active{
+    opacity:1; transform:translateY(0);
+    pointer-events:auto;
+  }
+
+  .eyebrow{
+    font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--terracotta-dark); font-weight:600; margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(34px,5.4vw,68px); line-height:1.05; margin:0 0 18px;
+    font-weight:700; letter-spacing:-0.02em; color:var(--ink);
+  }
+  h2{
+    font-size:clamp(26px,4vw,44px); line-height:1.12; margin:0 0 22px;
+    font-weight:700; letter-spacing:-0.015em; color:var(--ink);
+  }
+  p.lede{
+    font-size:clamp(16px,1.7vw,22px); line-height:1.55; color:var(--ink-soft);
+    max-width:760px; margin:0 auto; font-weight:400;
+  }
+  .center{ text-align:center; }
+  .maxw{ max-width:880px; margin:0 auto; }
+
+  .accent-bar{
+    width:52px; height:5px; border-radius:3px;
+    background:var(--terracotta); margin:0 auto 26px;
+  }
+
+  /* pill chip */
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--cream-card); border:1px solid var(--sand-dark);
+    border-radius:999px; padding:8px 16px;
+    font-size:13px; font-weight:600; color:var(--ink-soft);
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--sage); }
+
+  /* pipeline */
+  .pipeline{
+    display:flex; align-items:center; justify-content:center;
+    gap:10px; flex-wrap:wrap; margin:34px 0 8px;
+  }
+  .agent{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    width:150px;
+  }
+  .agent .badge{
+    width:64px; height:64px; border-radius:18px;
+    background:var(--cream-card); border:1.5px solid var(--sand-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    box-shadow: 0 1px 0 rgba(58,46,39,.03);
+  }
+  .agent.hot .badge{ border-color:var(--terracotta); background:var(--gold-light); }
+  .agent .name{ font-size:13px; font-weight:700; color:var(--ink); text-align:center; }
+  .agent .role{ font-size:11.5px; color:var(--ink-faint); text-align:center; line-height:1.35; }
+  .arrow{ font-size:20px; color:var(--ink-faint); margin:0 -2px; padding-bottom:34px; }
+
+  /* two column */
+  .cols{
+    display:flex; gap:40px; max-width:920px; margin:0 auto; text-align:left;
+  }
+  .col{ flex:1; }
+  .col h3{
+    font-size:14px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--terracotta-dark); margin:0 0 10px; font-weight:700;
+  }
+  .col ul{ margin:0; padding-left:20px; color:var(--ink-soft); font-size:15.5px; line-height:1.6; }
+  .col ul li{ margin-bottom:8px; }
+
+  /* kill shot toggle visual */
+  .toggle-row{
+    display:flex; align-items:center; justify-content:center; gap:22px; margin:30px 0 10px;
+  }
+  .switch{
+    width:64px; height:34px; border-radius:20px; background:var(--sand-dark);
+    position:relative; border:1.5px solid var(--sand-dark);
+  }
+  .switch .knob{
+    position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%;
+    background:var(--cream-card); box-shadow:0 1px 2px rgba(58,46,39,.25);
+    transition: left .35s ease;
+  }
+  .switch.on{ background:var(--terracotta); border-color:var(--terracotta); }
+  .switch.on .knob{ left:33px; }
+  .toggle-label{ font-size:13px; font-weight:700; color:var(--ink-soft); }
+
+  .verdict-row{ display:flex; gap:18px; justify-content:center; margin-top:26px; flex-wrap:wrap; }
+  .verdict{
+    width:220px; border-radius:16px; padding:16px 18px; text-align:left;
+    border:1.5px solid var(--sand-dark); background:var(--cream-card);
+  }
+  .verdict .tag{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+  .verdict.blocked{ border-color:var(--sage); }
+  .verdict.blocked .tag{ color:var(--sage); }
+  .verdict.leaked{ border-color:var(--terracotta); }
+  .verdict.leaked .tag{ color:var(--terracotta-dark); }
+  .verdict .headline{ font-size:14px; font-weight:600; color:var(--ink); margin:6px 0 4px; }
+  .verdict .sub{ font-size:12.5px; color:var(--ink-faint); line-height:1.4; }
+
+  /* architecture flow */
+  .flow{
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    margin: 30px 0 26px; max-width:960px;
+  }
+  .node{
+    background:var(--cream-card); border:1.5px solid var(--sand-dark);
+    border-radius:14px; padding:12px 16px; font-size:13.5px; font-weight:600; color:var(--ink);
+    text-align:center;
+  }
+  .node.guild{ border-color:var(--terracotta); background:var(--gold-light); color:var(--terracotta-dark); }
+  .node small{ display:block; font-weight:500; color:var(--ink-faint); font-size:11px; margin-top:3px; }
+  .flow .sep{ color:var(--ink-faint); font-size:16px; }
+
+  .footnote{
+    font-size:13px; color:var(--ink-faint); margin-top:26px; max-width:640px;
+  }
+
+  /* title slide */
+  .brand-mark{
+    width:64px; height:64px; border-radius:20px; background:var(--terracotta);
+    display:flex; align-items:center; justify-content:center; margin-bottom:26px;
+    box-shadow: 0 6px 20px rgba(124,88,67,.25);
+  }
+  .brand-mark span{ color:var(--cream-card); font-size:28px; font-weight:800; }
+
+  .prize-row{ display:flex; gap:12px; margin-top:30px; flex-wrap:wrap; justify-content:center; }
+
+  .cta{
+    display:inline-block; margin-top:34px;
+    background:var(--ink); color:var(--cream-card);
+    padding:14px 30px; border-radius:999px;
+    font-size:14px; font-weight:700; letter-spacing:.02em;
+  }
+  .repo{ font-size:14px; color:var(--ink-soft); margin-top:12px; }
+  .repo b{ color:var(--ink); }
+
+  /* chrome: progress + nav */
+  .chrome{
+    position:fixed; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center;
+    gap:9px; padding: 22px 0 26px;
+    z-index:20;
+  }
+  .chrome .step{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--sand-dark); cursor:pointer;
+    transition: background .25s ease, transform .25s ease;
+    border:none; padding:0;
+  }
+  .chrome .step.active{ background:var(--terracotta); transform:scale(1.3); }
+
+  .counter{
+    position:fixed; top:24px; right:28px;
+    font-size:12px; color:var(--ink-faint); letter-spacing:.04em;
+    font-variant-numeric: tabular-nums;
+    z-index:20;
+  }
+  .hint{
+    position:fixed; top:24px; left:28px;
+    font-size:12px; color:var(--ink-faint);
+    display:flex; align-items:center; gap:6px;
+    z-index:20; transition:opacity .6s ease;
+  }
+  .hint kbd{
+    font-family:inherit; font-size:11px; border:1px solid var(--sand-dark);
+    background:var(--cream-card); border-radius:5px; padding:2px 6px; color:var(--ink-soft);
+  }
+  .hint.hidden{ opacity:0; }
+
+  @media (prefers-color-scheme: dark){
+    :root{
+      --cream:#211a15; --cream-card:#2a221c; --sand:#382d24; --sand-dark:#463a2f;
+      --terracotta:#c99a7c; --terracotta-dark:#e0b498; --terracotta-light:#9c7159;
+      --ink:#f3ece2; --ink-soft:#cabaa9; --ink-faint:#8c7c6c;
+      --sage:#8fb097; --sage-light:#2c352e; --gold:#d8b57a; --gold-light:#332a1c;
+    }
+    .cta{ background:var(--terracotta); color:#211a15; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hint" id="hint"><kbd>space</kbd> or <kbd>&#8594;</kbd> to advance</div>
+<div class="counter" id="counter">1 / 8</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1. Title -->
+  <section class="slide active" data-index="0">
+    <div class="brand-mark"><span>E</span></div>
+    <div class="eyebrow">Memory Meets Motion</div>
+    <h1>Ember</h1>
+    <p class="lede">The living deal-flow layer — memory that resurfaces dead deals, and a Guild.ai agent council that decides whether they're worth waking up.</p>
+    <div class="prize-row">
+      <div class="pill"><span class="dot"></span>Submitted for Best Use of Guild.ai</div>
+    </div>
+  </section>
+
+  <!-- 2. The problem -->
+  <section class="slide" data-index="1">
+    <div class="eyebrow">The problem</div>
+    <h2 class="center">A pass is not a verdict.</h2>
+    <p class="lede center">It's a timestamped state that a new fact can invalidate. Every fund passes on companies that later become fundable again — a new round, a hiring spree, a warm path that opens up. Nobody re-checks old passes against new signals. Static CRMs store contacts. Nothing stores <i>why the door might still be open.</i></p>
+  </section>
+
+  <!-- 3. The pitch -->
+  <section class="slide" data-index="2">
+    <div class="eyebrow">The pitch</div>
+    <h2 class="center maxw">One query, three conditions</h2>
+    <p class="lede center">Startups I passed on — where a signal landed after the pass — and I still have a short warm path back in through someone I know.</p>
+    <div class="footnote center maxw" style="margin:26px auto 0;">
+      A multi-hop graph traversal joined against a temporal predicate, in one Cypher statement — the relational equivalent needs a self-join plus a recursive CTE.
+    </div>
+  </section>
+
+  <!-- 4. Guild council -->
+  <section class="slide" data-index="3">
+    <div class="eyebrow">Guild.ai is the brain</div>
+    <h2 class="center">Five agents, real boundaries</h2>
+    <div class="pipeline">
+      <div class="agent"><div class="badge">&#128065;&#65039;</div><div class="name">Eligibility</div><div class="role">Only agent with graph access</div></div>
+      <div class="arrow">&#8594;</div>
+      <div class="agent hot"><div class="badge">&#129333;</div><div class="name">Skeptic</div><div class="role">Independently verifies, can veto</div></div>
+      <div class="arrow">&#8594;</div>
+      <div class="agent"><div class="badge">&#128176;</div><div class="name">Investment Angle</div><div class="role">Decides the re-engagement angle</div></div>
+      <div class="arrow">&#8594;</div>
+      <div class="agent"><div class="badge">&#9997;&#65039;</div><div class="name">Citation &amp; Draft</div><div class="role">No citation, no draft</div></div>
+      <div class="arrow">&#8594;</div>
+      <div class="agent"><div class="badge">&#9989;</div><div class="name">Approval</div><div class="role">Human clicks, or nothing sends</div></div>
+    </div>
+    <p class="footnote center maxw" style="margin:6px auto 0;">Boundaries enforced by type signatures, not prompt instructions — each agent's output type makes the wrong move unrepresentable.</p>
+  </section>
+
+  <!-- 5. Why it's real Guild usage -->
+  <section class="slide" data-index="4">
+    <div class="eyebrow">Not a wrapper</div>
+    <h2 class="center">Real triggers. Real disagreement.</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>What's actually deployed</h3>
+        <ul>
+          <li>All five agents live in <code>guild-agents/</code> as real, deployed Guild.ai agents</li>
+          <li>Each has its own Trigger and its own Trigger API key</li>
+          <li>Skeptic can independently <b>veto</b> a candidate before Investment Angle ever runs</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Honest by design</h3>
+        <ul>
+          <li>Every stage tries its real Guild trigger first</li>
+          <li>Falls back one tier at a time if a call fails — never fakes success</li>
+          <li>The dashboard shows which tier ran, live, per agent</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Kill shot -->
+  <section class="slide" data-index="5">
+    <div class="eyebrow">The proof</div>
+    <h2 class="center">The <code>skeptik</code> kill shot</h2>
+    <p class="lede center">Bypass Skeptic's veto and re-run the same rumor-flavored signal. This is the switch that proves the council is load-bearing, not decorative.</p>
+    <div class="verdict-row">
+      <div class="verdict blocked">
+        <div class="tag">Switch off</div>
+        <div class="headline">Kelpwork — vetoed</div>
+        <div class="sub">Skeptic flags "rumored, unconfirmed" language and blocks it before it reaches Approval.</div>
+      </div>
+      <div class="verdict leaked">
+        <div class="tag">Switch on</div>
+        <div class="headline">Kelpwork — reaches Approval</div>
+        <div class="sub">Same signal, veto bypassed. Unverified draft slips all the way to the human queue.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Architecture -->
+  <section class="slide" data-index="6">
+    <div class="eyebrow">Full stack</div>
+    <h2 class="center">Where Guild sits in the loop</h2>
+    <div class="flow">
+      <div class="node">LaserData<small>live signal</small></div>
+      <div class="sep">&#8594;</div>
+      <div class="node">FalkorDB<small>graph memory</small></div>
+      <div class="sep">&#8594;</div>
+      <div class="node">RocketRide<small>reads memory</small></div>
+      <div class="sep">&#8594;</div>
+      <div class="node guild">Guild council<small>5 agents, can say no</small></div>
+      <div class="sep">&#8594;</div>
+      <div class="node">Slack + UI<small>human approval</small></div>
+    </div>
+    <p class="footnote center maxw" style="margin:0 auto;">Every other layer moves memory forward. Guild is the only layer with independent judgment sitting in that path — it can stop a candidate cold.</p>
+  </section>
+
+  <!-- 8. Close -->
+  <section class="slide" data-index="7">
+    <div class="eyebrow">Ember</div>
+    <h2 class="center">Best Use of Guild.ai</h2>
+    <p class="lede center">Five deployed agents. A real veto. A kill switch that proves it. Memory that only acts through a council that can disagree with itself.</p>
+    <div class="repo center">Repo: <b>bnisevich/bnisevich-mmm</b></div>
+  </section>
+
+</div>
+
+<div class="chrome" id="chrome"></div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var current = 0;
+  var counterEl = document.getElementById('counter');
+  var chromeEl = document.getElementById('chrome');
+  var hintEl = document.getElementById('hint');
+
+  for (var i = 0; i < total; i++) {
+    var b = document.createElement('button');
+    b.className = 'step' + (i === 0 ? ' active' : '');
+    b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    (function(idx){ b.addEventListener('click', function(){ go(idx); }); })(i);
+    chromeEl.appendChild(b);
+  }
+  var steps = Array.prototype.slice.call(chromeEl.querySelectorAll('.step'));
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+    steps.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+    counterEl.textContent = (current + 1) + ' / ' + total;
+  }
+
+  function go(i){
+    current = Math.max(0, Math.min(total - 1, i));
+    render();
+    history.replaceState(null, '', '#' + (current + 1));
+  }
+  function next(){ if (current < total - 1) go(current + 1); }
+  function prev(){ if (current > 0) go(current - 1); }
+
+  function dismissHint(){
+    if (hintEl && !hintEl.classList.contains('hidden')) hintEl.classList.add('hidden');
+  }
+
+  window.addEventListener('keydown', function(e){
+    var advance = ['ArrowRight','ArrowDown','PageDown',' ','Spacebar'];
+    var back = ['ArrowLeft','ArrowUp','PageUp','Backspace'];
+    if (advance.indexOf(e.key) !== -1) { e.preventDefault(); dismissHint(); next(); }
+    else if (back.indexOf(e.key) !== -1) { e.preventDefault(); dismissHint(); prev(); }
+    else if (e.key === 'Home') { e.preventDefault(); dismissHint(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); dismissHint(); go(total - 1); }
+  });
+
+  // click / tap right or left half to navigate; wheel and touch scroll are ignored entirely
+  document.getElementById('deck').addEventListener('click', function(e){
+    dismissHint();
+    var half = window.innerWidth / 2;
+    if (e.clientX > half) next(); else prev();
+  });
+
+  ['wheel','touchmove'].forEach(function(evt){
+    window.addEventListener(evt, function(e){ e.preventDefault(); }, { passive:false });
+  });
+
+  var startAt = parseInt((location.hash || '').replace('#', ''), 10);
+  if (!isNaN(startAt) && startAt >= 1 && startAt <= total) current = startAt - 1;
+  render();
+})();
+</script>
+</body>
+</html>
