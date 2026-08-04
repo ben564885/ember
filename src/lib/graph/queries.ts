@@ -2,7 +2,7 @@ import { graphQuery } from "./client";
 import { ME_ID } from "./schema";
 
 export interface ResurfacedCandidate {
-  /** Unique per (startup, signal, founder path) — one startup can resurface via several signals or several warm paths, so startupId alone isn't a safe key. */
+  /** Unique per (startup, signal, founder path) — kept specific even though getResurfacedCandidates now returns at most one row per startup, so a shape change there doesn't silently collide keys. */
   key: string;
   startupId: string;
   startupName: string;
@@ -31,10 +31,20 @@ export interface ResurfacedCandidate {
  * already knew about when it passed leak back into the ranked list. Unlike
  * the other three toggles, this one *increases* the candidate count when
  * active — proof runs the opposite direction, which is deliberate.
+ *
+ * A startup can match this query many times over — once per qualifying
+ * signal, once more per reachable founder — and the live GitHub/HN firehose
+ * only adds to that over a long-running session (a broad keyword match can
+ * rack up one HAD_SIGNAL per live poll). Rather than let the candidate list
+ * grow unbounded, this collapses to the single freshest signal per startup
+ * (rows already arrive sorted `sig.timestamp DESC, hops ASC`, so the first
+ * occurrence per startupId is both the newest signal and the shortest path
+ * to it) and caps the result to `limit` startups — a small, stable list for
+ * the council to work through instead of a wall of near-duplicate rows.
  */
 export async function getResurfacedCandidates(
   maxHops = 2,
-  opts: { ignoreTimePredicate?: boolean } = {},
+  opts: { ignoreTimePredicate?: boolean; limit?: number } = {},
 ): Promise<ResurfacedCandidate[]> {
   const timeClause = opts.ignoreTimePredicate ? "" : "WHERE sig.timestamp > passed.date";
   const rows = await graphQuery<{
@@ -57,7 +67,7 @@ export async function getResurfacedCandidates(
     { meId: ME_ID },
   );
 
-  return rows.map((r) => ({
+  const candidates = rows.map((r) => ({
     key: `${r.s.properties.id}::${r.sig.properties.id}::${r.f.properties.id}`,
     startupId: r.s.properties.id as string,
     startupName: r.s.properties.name as string,
@@ -73,6 +83,16 @@ export async function getResurfacedCandidates(
     pathHops: r.hops,
     pathNames: r.pathNames,
   }));
+
+  const seenStartups = new Set<string>();
+  const onePerStartup: ResurfacedCandidate[] = [];
+  for (const c of candidates) {
+    if (seenStartups.has(c.startupId)) continue;
+    seenStartups.add(c.startupId);
+    onePerStartup.push(c);
+  }
+
+  return onePerStartup.slice(0, opts.limit ?? 3);
 }
 
 /** Full snapshot for the graph explorer view. */
